@@ -21,7 +21,7 @@ import static ru.practicum.utill.Constants.DATE_FORMAT;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class StatServiceController {
+public class StatController {
     private final StatService statService;
 
     @PostMapping("/hit")

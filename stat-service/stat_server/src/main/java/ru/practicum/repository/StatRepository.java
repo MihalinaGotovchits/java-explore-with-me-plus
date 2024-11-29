@@ -8,7 +8,7 @@ import ru.practicum.model.Stat;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface StatServiceRepository extends JpaRepository<Stat, Long> {
+public interface StatRepository extends JpaRepository<Stat, Long> {
     @Query("SELECT new ru.practicum.dto.StatResponseDto(stat.ip,stat.uri, count(distinct stat.ip)) " +
             "FROM Stat AS stat " +
             "WHERE stat.timestamp BETWEEN ?1 AND ?2 " +
