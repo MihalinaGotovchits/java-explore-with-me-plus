@@ -3,7 +3,7 @@ services:
     build: stat-service/stat_server
     container_name: stat-server
     ports:
-      - "9090:9090"
+      - "9090:9091"
       - "9091:9091"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stat_db
