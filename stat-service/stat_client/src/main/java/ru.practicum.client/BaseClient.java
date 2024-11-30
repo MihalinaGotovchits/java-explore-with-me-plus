@@ -42,7 +42,7 @@ public class BaseClient {
     }
 
     private static ResponseEntity<Object> prepareServiceResponse(ResponseEntity<Object> response) {
-        if (response.getStatusCode().is2xxSuccessful()){
+        if (response.getStatusCode().is2xxSuccessful()) {
             return response;
         }
 

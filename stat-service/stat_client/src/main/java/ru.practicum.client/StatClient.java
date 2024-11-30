@@ -20,7 +20,7 @@ import java.util.Map;
 @Service
 public class StatClient extends BaseClient {
 
-    public StatClient(@Value("${stats-service.url}") String serverUrl, RestTemplateBuilder builder){
+    public StatClient(@Value("${stats-service.url}") String serverUrl, RestTemplateBuilder builder) {
         super(createRestTemplate(serverUrl, builder));
     }
 
@@ -34,11 +34,11 @@ public class StatClient extends BaseClient {
                 .build();
     }
 
-    public ResponseEntity<Object> addStatEvent(StatDto statDto){
+    public ResponseEntity<Object> addStatEvent(StatDto statDto) {
         return post("/hit", statDto);
     }
 
-    public ResponseEntity<Object> readStatEvent(String start, String end, @Nullable List<String> uris, boolean unique){
+    public ResponseEntity<Object> readStatEvent(String start, String end, @Nullable List<String> uris, boolean unique) {
         Map<String, Object> parameters;
         if (uris == null) {
             parameters = Map.of("start", encode(start),
@@ -53,7 +53,7 @@ public class StatClient extends BaseClient {
         return get("/stats?start={start}&end={end}&unigue={unigue}&uris={uris}", parameters);
     }
 
-    private String encode (String value) {
+    private String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }
