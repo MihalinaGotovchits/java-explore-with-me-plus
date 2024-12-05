@@ -2,7 +2,10 @@ package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.dto.event.EventParam;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.service.EventService;
 
@@ -33,7 +36,18 @@ public class PublicEventController {
                                          @RequestParam(required = false) String sort,
                                          @RequestParam(required = false, defaultValue = "0") Integer from,
                                          @RequestParam(required = false, defaultValue = "10") Integer size) {
-        return eventService.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+        log.info("Get events.");
+        EventParam eventParam = EventParam.builder()
+                .text(text)
+                .categories(categories)
+                .paid(paid)
+                .rangeStart(rangeStart)
+                .rangeEnd(rangeEnd)
+                .onlyAvailable(onlyAvailable)
+                .sort(sort)
+                .pageable(PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, sort.toLowerCase())))
+                .build();
+        return eventService.getEvents(eventParam);
     }
 
     /**
@@ -44,6 +58,7 @@ public class PublicEventController {
      */
     @GetMapping(path = "/{id}")
     public EventShortDto getEventById(@PathVariable Long id) {
+        log.info("Get event by id.");
         return eventService.getEventById(id);
     }
 }
