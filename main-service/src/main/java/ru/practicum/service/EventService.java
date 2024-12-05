@@ -15,5 +15,5 @@ public interface EventService {
                                   Integer from,
                                   Integer size);
 
-    EventShortDto getEventById(int id);
+    EventShortDto getEventById(Long id);
 }

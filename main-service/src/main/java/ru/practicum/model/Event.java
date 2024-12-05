@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Formula;
 import ru.practicum.status.event.State;
 
 import java.time.LocalDateTime;
@@ -27,7 +28,7 @@ public class Event {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @Transient
+    @Formula("(SELECT COUNT(r.id) FROM requests r WHERE r.event_id = id AND r.status = 'confirmed')")
     private Integer confirmedRequests;
 
     @Column(name = "create_on")
@@ -43,7 +44,7 @@ public class Event {
     private User initiator;
 
     @ManyToOne
-    @Column(name = "location_id")
+    @JoinColumn(name = "location_id")
     private Location location;
 
     private Boolean paid;
@@ -61,7 +62,6 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private State state;
 
-    @Transient
     private String title;
 
     @Transient

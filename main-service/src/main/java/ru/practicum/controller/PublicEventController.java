@@ -8,7 +8,9 @@ import ru.practicum.service.EventService;
 
 import java.util.List;
 
-/** Публичный API для работы с событиями */
+/**
+ * Публичный API для работы с событиями
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/events")
@@ -16,6 +18,11 @@ import java.util.List;
 public class PublicEventController {
     private final EventService eventService;
 
+    /**
+     * Список платных (или нет) событий по категориям с текстом в аннотации и описании,
+     * в диапазоне времени rangeStart rangeEnd
+     * отсортированных по дате или количеству просмотров
+     */
     @GetMapping
     public List<EventShortDto> getEvents(@RequestParam(required = false) String text,
                                          @RequestParam(required = false) List<Integer> categories,
@@ -29,12 +36,14 @@ public class PublicEventController {
         return eventService.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
     }
 
-    /** Получение подробной информации об опубликованном событии по его идентификатору
-     *  @param id идентификатор события
-     *  @return краткую информацию о событии
-     *  */
+    /**
+     * Подробная информация об опубликованном событии по его идентификатору
+     *
+     * @param id идентификатор события
+     * @return краткую информацию о событии
+     */
     @GetMapping(path = "/{id}")
-    public EventShortDto getEventById(@PathVariable int id) {
+    public EventShortDto getEventById(@PathVariable Long id) {
         return eventService.getEventById(id);
     }
 }

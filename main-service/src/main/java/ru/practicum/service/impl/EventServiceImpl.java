@@ -1,11 +1,17 @@
 package ru.practicum.service.impl;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.mapper.EventMapper;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.service.EventService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -13,9 +19,9 @@ import java.util.List;
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
 
-    /*текстовый поиск (по аннотации и подробному описанию) должен быть без учета регистра букв
-    если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно выгружать события, которые произойдут позже текущей даты и времени*/
-
+    /**
+     * TODO пока что не работает с сортировкой по количеству просмотров
+     */
     @Override
     public List<EventShortDto> getEvents(String text,
                                          List<Integer> categories,
@@ -26,11 +32,25 @@ public class EventServiceImpl implements EventService {
                                          String sort,
                                          Integer from,
                                          Integer size) {
-        return List.of();
+        Sort s = Sort.by(Sort.Direction.DESC, sort);
+        Pageable pageable = PageRequest.of(from, size, s);
+
+        if (rangeStart == null && rangeEnd == null) {
+            return eventRepository.findAllByTextAndCategoryOnlyAvailable(
+                            text, categories, paid, String.valueOf(LocalDateTime.now()), onlyAvailable, pageable).stream()
+                    .map(EventMapper::toEventShortDto)
+                    .toList();
+        }
+        return eventRepository.findAllByTextAndCategoryInRangeOnlyAvailable(
+                        text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable).stream()
+                .map(EventMapper::toEventShortDto)
+                .toList();
     }
 
     @Override
-    public EventShortDto getEventById(int id) {
-        return null;
+    public EventShortDto getEventById(Long id) {
+        return eventRepository.findById(id)
+                .map(EventMapper::toEventShortDto)
+                .orElseThrow(() -> new EntityNotFoundException("Event with id " + id + " not found"));
     }
 }
