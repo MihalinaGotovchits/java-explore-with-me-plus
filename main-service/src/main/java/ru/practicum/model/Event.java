@@ -43,7 +43,7 @@ public class Event {
     private User initiator;
 
     @ManyToOne
-    @Column(name = "location_id")
+    @JoinColumn(name = "location_id")
     private Location location;
 
     private Boolean paid;
