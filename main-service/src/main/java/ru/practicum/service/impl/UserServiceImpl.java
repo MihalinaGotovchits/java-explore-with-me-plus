@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getListUsers(List<Long> userIds, Integer from, Integer size) {
         PageRequest page = PageRequest.of(from / size, size);
         log.info("getAllUsers - successfully");
-        return (userIds != null) ? userRepository.findByUserIdIn(userIds, page).stream()
+        return (userIds != null) ? userRepository.findByIdIn(userIds, page).stream()
                 .map(UserMapper::userDto).collect(Collectors.toList()) : userRepository.findAll(page)
                 .stream().map(UserMapper::userDto).collect(Collectors.toList());
     }
