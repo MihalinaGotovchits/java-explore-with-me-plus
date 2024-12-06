@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 /**данные для изменения события с правами администратора*/
-class UpdateEventAdminRequest {
+public class UpdateEventAdminRequest {
 
     private String annotation;
 

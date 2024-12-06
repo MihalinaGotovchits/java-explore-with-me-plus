@@ -1,6 +1,7 @@
 package ru.practicum.mapper;
 
 import lombok.experimental.UtilityClass;
+import ru.practicum.dto.event.UpdateEventAdminRequest;
 import ru.practicum.model.Category;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
@@ -72,5 +73,19 @@ public class EventMapper {
     public List<EventShortDto> eventToEventShortDtoList(List<Event> events) {
         return events == null ? new ArrayList<>() :
                 events.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
+    }
+
+    public NewEventDto toNewEventDto(UpdateEventAdminRequest adminRequest) {
+        return NewEventDto.builder()
+                .annotation(adminRequest.getAnnotation())
+                .categoryId(adminRequest.getCategoryId())
+                .description(adminRequest.getDescription())
+                .eventDate(adminRequest.getEventDate())
+                .location(LocationMapper.toLocationDto(adminRequest.getLocation()))
+                .paid(adminRequest.getPaid())
+                .participantLimit(adminRequest.getParticipantLimit())
+                .requestModerator(adminRequest.getRequestModeration())
+                .title(adminRequest.getTitle())
+                .build();
     }
 }
