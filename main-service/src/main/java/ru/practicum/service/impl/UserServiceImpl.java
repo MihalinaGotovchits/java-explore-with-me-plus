@@ -10,7 +10,6 @@ import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.exception.DataIntegrityViolationException;
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.exception.NotFoundNewException;
 import ru.practicum.mapper.RequestMapper;
 import ru.practicum.mapper.UserMapper;
 import ru.practicum.model.Event;
@@ -68,13 +67,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundNewException(String.format("User with id=%d not found", userId)));
+                .orElseThrow(() -> new NotFoundException(String.format("User with id=%d not found", userId)));
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundNewException(String.format("Event with id=%d not found",eventId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%d not found", eventId)));
 
         requestRepository.getRequestByRequester_IdAndEvent_Id(userId, eventId)
                 .ifPresent(result -> {
-                    throw new NotFoundNewException(String.format("Request with userId=%d and eventId=%d", userId, eventId));
+                    throw new NotFoundException(String.format("Request with userId=%d and eventId=%d", userId, eventId));
                 });
 
         if (event.getInitiator().getId().equals(userId)) {
@@ -99,7 +98,7 @@ public class UserServiceImpl implements UserService {
                 .status(RequestStatus.PENDING)
                 .build();
 
-        if (Boolean.FALSE.equals(event.getRequestModeration())){
+        if (Boolean.FALSE.equals(event.getRequestModeration())) {
             request.setStatus(RequestStatus.CONFIRMED);
         }
 
@@ -119,7 +118,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         Request request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundNewException(String.format("Request with id=%d not found", requestId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Request with id=%d not found", requestId)));
 
         request.setStatus(RequestStatus.CANCELED);
         ParticipationRequestDto requestDto = RequestMapper.toParticipationRequestDto(requestRepository.save(request));
