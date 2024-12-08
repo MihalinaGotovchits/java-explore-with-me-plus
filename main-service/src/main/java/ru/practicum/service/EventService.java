@@ -11,7 +11,7 @@ public interface EventService {
 
     EventFullDto updateEventFromAdmin(Long userId, UpdateEventAdminRequest updateEventAdminRequest);
 
-    List<EventShortDto> getEventsOfUser (Long userId, SearchEventParamPrivate searchEventParamPrivate);
+    List<EventShortDto> getEventsOfUser(Long userId, SearchEventParamPrivate searchEventParamPrivate);
 
     EventFullDto createEvent(Long userId, NewEventDto newEventDto);
 

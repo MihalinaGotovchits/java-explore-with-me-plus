@@ -24,21 +24,21 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserDto>> getUsers(@RequestParam(required = false) List<Long> userIds,
                                                   @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
-                                                  @RequestParam(defaultValue = "0") @PositiveOrZero Integer size){
+                                                  @RequestParam(defaultValue = "0") @PositiveOrZero Integer size) {
         log.info("/admin/users/GET/getUsers");
-        List<UserDto> users= userService.getListUsers(userIds, from, size);
+        List<UserDto> users = userService.getListUsers(userIds, from, size);
         return ResponseEntity.ok(users);
     }
 
     @PostMapping
-    public ResponseEntity<UserDto> registerUser(@RequestBody NewUserRequest user){
+    public ResponseEntity<UserDto> registerUser(@RequestBody NewUserRequest user) {
         log.info("/admin/users/POST/registerUser - {}", user);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(userService.createUser(user));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         log.info("/admin/users/DELETE/delete - {}", id);
         userService.deleteUserById(id);
         return ResponseEntity.noContent().build();
