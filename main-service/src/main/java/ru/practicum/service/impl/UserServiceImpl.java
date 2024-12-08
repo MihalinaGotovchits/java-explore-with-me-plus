@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
                     "You can't participate in an unpublished event.");
         }
 
-        if (event.getParticipantLimit() <= requestRepository.getCountByEvent_Id(eventId)) {
+        if (event.getParticipantLimit() <= requestRepository.findAllByEventIdAndStatus(eventId, RequestStatus.CONFIRMED).size()) {
             throw new DataIntegrityViolationException(
                     "The event has reached its participation request limit.");
         }

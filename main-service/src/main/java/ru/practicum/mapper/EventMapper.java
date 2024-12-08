@@ -1,12 +1,9 @@
 package ru.practicum.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.dto.event.UpdateEventAdminRequest;
-import ru.practicum.model.Category;
-import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.EventShortDto;
-import ru.practicum.dto.event.NewEventDto;
-import ru.practicum.model.Event;
+import ru.practicum.dto.category.CategoryDto;
+import ru.practicum.dto.event.*;
+import ru.practicum.model.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,17 +16,19 @@ public class EventMapper {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public Event toEvent(NewEventDto eventDto) {
+    public Event toEvent(NewEventDto eventDto, User user, Location location, Category category) {
         return Event.builder()
                 .eventDate(eventDto.getEventDate())
                 .annotation(eventDto.getAnnotation())
-                .category(Category.builder().id(eventDto.getCategoryId()).build())
+                .category(category)
                 .paid(eventDto.getPaid())
-                .location(LocationMapper.toLocation(eventDto.getLocation()))
+                .location(location)
                 .participantLimit(eventDto.getParticipantLimit())
                 .description(eventDto.getDescription())
                 .title(eventDto.getTitle())
-                .requestModeration(eventDto.getRequestModerator())
+                .createOn(LocalDateTime.now())
+                .initiator(user)
+                .requestModeration(eventDto.getRequestModeration())
                 .build();
     }
 
@@ -38,7 +37,7 @@ public class EventMapper {
                 .id(event.getId())
                 .title(event.getTitle())
                 .description(event.getDescription())
-                .createOn(event.getCreateOn())
+                .createdOn(event.getCreateOn())
                 .initiator(UserMapper.userDto(event.getInitiator()))
                 .confirmedRequests(event.getConfirmedRequests())
                 .views(event.getViews())
@@ -47,9 +46,35 @@ public class EventMapper {
                 .participantLimit(event.getParticipantLimit())
                 .requestModeration(event.getRequestModeration())
                 .paid(event.getPaid())
-                .category(CategoryMapper.toCategoryDto(event.getCategory()))
+                .category((event.getCategory() == null) ? new CategoryDto() : CategoryMapper.toCategoryDto(event.getCategory()))
                 .eventDate(event.getEventDate())
                 .location(LocationMapper.toLocationDto(event.getLocation()))
+                .build();
+
+        if (event.getPublishedOn() != null) {
+            build.setPublishedOn(LocalDateTime.parse(event.getPublishedOn().format(FORMATTER)));
+        }
+        return build;
+    }
+
+    public EventFullDto toEventFullDto(Event event, List<Request> requests) {
+        EventFullDto build = EventFullDto.builder()
+                .id(event.getId())
+                .title(event.getTitle())
+                .description(event.getDescription())
+                .createdOn(event.getCreateOn())
+                .initiator(UserMapper.userDto(event.getInitiator()))
+                .confirmedRequests(event.getConfirmedRequests())
+                .views(event.getViews())
+                .state(event.getState())
+                .annotation(event.getAnnotation())
+                .participantLimit(event.getParticipantLimit())
+                .requestModeration(event.getRequestModeration())
+                .paid(event.getPaid())
+                .category((event.getCategory() == null) ? new CategoryDto() : CategoryMapper.toCategoryDto(event.getCategory()))
+                .eventDate(event.getEventDate())
+                .location(LocationMapper.toLocationDto(event.getLocation()))
+                .confirmedRequests(requests.size())
                 .build();
 
         if (event.getPublishedOn() != null) {
@@ -62,7 +87,7 @@ public class EventMapper {
         return EventShortDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
-                .category(CategoryMapper.toCategoryDto(event.getCategory()))
+                .category((event.getCategory() == null) ? new CategoryDto() : CategoryMapper.toCategoryDto(event.getCategory()))
                 .eventDate(event.getEventDate())
                 .initiator(UserMapper.userShortDto(event.getInitiator()))
                 .paid(event.getPaid())
@@ -78,14 +103,28 @@ public class EventMapper {
     public NewEventDto toNewEventDto(UpdateEventAdminRequest adminRequest) {
         return NewEventDto.builder()
                 .annotation(adminRequest.getAnnotation())
-                .categoryId(adminRequest.getCategoryId())
+                .category(adminRequest.getCategoryId())
                 .description(adminRequest.getDescription())
                 .eventDate(adminRequest.getEventDate())
-                .location(LocationMapper.toLocationDto(adminRequest.getLocation()))
+                .location((adminRequest.getLocation() == null) ? null : LocationMapper.toLocationDto(adminRequest.getLocation()))
                 .paid(adminRequest.getPaid())
                 .participantLimit(adminRequest.getParticipantLimit())
-                .requestModerator(adminRequest.getRequestModeration())
+                .requestModeration(adminRequest.getRequestModeration())
                 .title(adminRequest.getTitle())
+                .build();
+    }
+
+    public NewEventDto toNewEventDto(UpdateEventUserRequest userRequest) {
+        return NewEventDto.builder()
+                .annotation(userRequest.getAnnotation())
+                .category(userRequest.getCategory())
+                .description(userRequest.getDescription())
+                .eventDate(userRequest.getEventDate())
+                .location((userRequest.getLocation() == null) ? null : LocationMapper.toLocationDto(userRequest.getLocation()))
+                .paid(userRequest.getPaid())
+                .participantLimit(userRequest.getParticipantLimit())
+                .requestModeration(userRequest.getRequestModeration())
+                .title(userRequest.getTitle())
                 .build();
     }
 }

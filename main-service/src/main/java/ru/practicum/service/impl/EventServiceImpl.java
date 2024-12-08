@@ -1,46 +1,54 @@
 package ru.practicum.service.impl;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.NewEventDto;
-import ru.practicum.dto.event.SearchEventParamAdmin;
-import ru.practicum.dto.event.UpdateEventAdminRequest;
+import ru.practicum.dto.event.*;
+import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
+import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.dto.request.UpdatedRequestsDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.UncorrectedParametersException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.mapper.LocationMapper;
-import ru.practicum.model.Category;
-import ru.practicum.model.Event;
-import ru.practicum.model.Location;
-import ru.practicum.model.Request;
-import ru.practicum.repository.CategoryRepository;
-import ru.practicum.repository.EventRepository;
-import ru.practicum.repository.RequestRepository;
+import ru.practicum.mapper.RequestMapper;
+import ru.practicum.model.*;
+import ru.practicum.repository.*;
 import ru.practicum.service.EventService;
 import ru.practicum.status.event.AdminEventStatus;
 import ru.practicum.status.event.State;
+import ru.practicum.status.event.UserEventStatus;
 import ru.practicum.status.request.RequestStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EventServiceImpl implements EventService {
+
     private final EventRepository eventRepository;
 
     private final CategoryRepository categoryRepository;
 
     private final RequestRepository requestRepository;
+
+    private final UserRepository userRepository;
+
+    private final LocationRepository locationRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     public List<EventFullDto> getAllEventFromAdmin(SearchEventParamAdmin searchEventParamAdmin) {
@@ -86,6 +94,61 @@ public class EventServiceImpl implements EventService {
         return result;
     }
 
+    public UpdatedRequestsDto confirmRequestsPrivate(Long userId, Long eventId, EventRequestStatusUpdateRequest updatedRequests) {
+
+        User user = checkUser(userId);
+
+        Event event = checkEvent(eventId);
+
+        checkEventInitiator(event, user);
+
+        List<Long> ids = updatedRequests.getRequestIds().stream().toList();
+
+        if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
+            return RequestMapper.toUpdatedRequestsDto(RequestMapper.toListRequestDto(requestRepository.findAllByIdIn(ids)), List.of());
+        }
+
+        List<Request> requests = requestRepository.findAllByEventIdAndStatusAndIdIn(eventId, RequestStatus.PENDING, ids);
+
+        if (requests.size() != updatedRequests.getRequestIds().size()) {
+            throw new ConflictException("Изменить можно только заявки в статусе ожидания");
+        }
+
+        List<Request> confirmedRequests = getConfirmedRequests(eventId);
+
+        if (confirmedRequests.size() + updatedRequests.getRequestIds().size() > event.getParticipantLimit()) {
+            throw new ConflictException("Нельзя выходить за лимиты заявок");
+        }
+
+        requestRepository.updateRequestsStatusByIds(updatedRequests.getStatus(), ids);
+
+        if (confirmedRequests.size() + updatedRequests.getRequestIds().size() == event.getParticipantLimit()) {
+            requestRepository.rejectRequestsPending();
+        }
+
+        entityManager.clear();
+
+        if (updatedRequests.getStatus().equals(RequestStatus.CONFIRMED)) {
+            return RequestMapper.toUpdatedRequestsDto(RequestMapper.toListRequestDto(requestRepository.findAllByIdIn(ids)), List.of());
+        } else {
+            return RequestMapper.toUpdatedRequestsDto(List.of(), RequestMapper.toListRequestDto(requestRepository.findAllByIdIn(ids)));
+        }
+    }
+
+
+    @Override
+    public EventFullDto getEventPrivate(Long userId, Long eventId) {
+
+        User user = checkUser(userId);
+
+        Event event = checkEvent(eventId);
+
+        checkEventInitiator(event, user);
+
+        return EventMapper.toEventFullDto(event, getConfirmedRequests(event.getId()));
+
+    }
+
     @Override
     public EventFullDto updateEventFromAdmin(Long eventId, UpdateEventAdminRequest updateEvent) {
         Event oldEvent = checkEvent(eventId);
@@ -125,6 +188,120 @@ public class EventServiceImpl implements EventService {
         return eventAfterUpdate != null ? EventMapper.toEventFullDto(eventAfterUpdate) : null;
     }
 
+    @Override
+    public EventFullDto updateEventFromUser(Long userId, Long eventId, UpdateEventUserRequest updateEvent) {
+
+        User user = checkUser(userId);
+
+        Event oldEvent = checkEvent(eventId);
+
+        checkEventInitiator(oldEvent, user);
+
+        if (!oldEvent.getState().equals(State.PENDING) && !oldEvent.getState().equals(State.CANCELED)) {
+            throw new ConflictException("Изменить можно только неподтвержденное событие");
+        }
+        boolean hasChanges = false;
+        Event eventForUpdate = universalUpdate(oldEvent, EventMapper.toNewEventDto(updateEvent));
+        if (eventForUpdate == null) {
+            eventForUpdate = oldEvent;
+        } else {
+            hasChanges = true;
+        }
+        LocalDateTime eventDate = updateEvent.getEventDate();
+        if (eventDate != null) {
+            if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
+                throw new UncorrectedParametersException("Некорректные параметры даты. Дата начала изменяемого" +
+                        "события должна быть не ранне, чем за 2 часа от даты его публикации.");
+            }
+            eventForUpdate.setEventDate(updateEvent.getEventDate());
+            hasChanges = true;
+        }
+        UserEventStatus action = updateEvent.getStateAction();
+        if (action != null) {
+            if (UserEventStatus.SEND_TO_REVIEW.equals(action)) {
+                eventForUpdate.setState(State.PENDING);
+                hasChanges = true;
+            } else if (UserEventStatus.CANCEL_REVIEW.equals(action)) {
+                eventForUpdate.setState(State.CANCELED);
+                hasChanges = true;
+            }
+        }
+        Event eventAfterUpdate = null;
+        if (hasChanges) {
+            eventAfterUpdate = eventRepository.save(eventForUpdate);
+        }
+        return eventAfterUpdate != null ? EventMapper.toEventFullDto(eventAfterUpdate) : null;
+    }
+
+    @Override
+    public List<EventShortDto> getEventsOfUser(Long userId, SearchEventParamPrivate searchEventParamPrivate) {
+
+        User user = checkUser(userId);
+
+        PageRequest page = PageRequest.of(searchEventParamPrivate.getFrom() / searchEventParamPrivate.getSize(),
+                searchEventParamPrivate.getSize());
+        Specification<Event> specification = Specification.where(null);
+
+        specification = specification.and((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("initiator"), user));
+
+        Page<Event> events = eventRepository.findAll(specification, page);
+
+        List<EventShortDto> result = events.getContent().stream()
+                .map(EventMapper::toEventShortDto).collect(Collectors.toList());
+        Map<Long, List<Request>> confirmedRequestsCount = getConfirmedRequestsCount(events.toList());
+        for (EventShortDto event : result) {
+            List<Request> requests = confirmedRequestsCount.getOrDefault(event.getId(), List.of());
+            event.setConfirmedRequest(requests.size());
+        }
+
+        return result;
+    }
+
+    @Override
+    public EventFullDto createEvent(Long userId, NewEventDto newEvent) {
+
+        User user = checkUser(userId);
+
+        checkEventDate(newEvent.getEventDate());
+
+        Location location = locationRepository.save(LocationMapper.toLocation(newEvent.getLocation()));
+
+        Event event = EventMapper.toEvent(newEvent, user, location, checkCategory(newEvent.getCategory()));
+        event.setState(State.PENDING);
+
+        if (event.getPaid() == null) {
+            event.setPaid(false);
+        }
+        if (event.getParticipantLimit() == null) {
+            event.setParticipantLimit(0);
+        }
+        if (event.getRequestModeration() == null) {
+            event.setRequestModeration(true);
+        }
+
+        return EventMapper.toEventFullDto(eventRepository.save(event));
+    }
+
+    @Override
+    public List<ParticipationRequestDto> getRequestsPrivate(Long userId, Long eventId) {
+
+        User user = checkUser(userId);
+
+        Event event = checkEvent(eventId);
+
+        checkEventInitiator(event, user);
+
+        List<Request> requests = requestRepository.findAllByEventId(eventId);
+
+        return RequestMapper.toListRequestDto(requests);
+    }
+
+    private void checkEventInitiator(Event event, User user) {
+        if (!event.getInitiator().equals(user)) {
+            throw new ConflictException("Событие не создано текущим пользователем");
+        }
+    }
 
     private Event checkEvent(Long eventId) {
         return eventRepository.findById(eventId).orElseThrow(
@@ -138,6 +315,22 @@ public class EventServiceImpl implements EventService {
         );
     }
 
+    private User checkUser(Long userId) {
+
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
+            throw new NotFoundException("Пользователь с Id: " + userId + " не найден");
+        } else {
+            return user.get();
+        }
+    }
+
+    private void checkEventDate(LocalDateTime eventDate) {
+        if (eventDate.isBefore(LocalDateTime.now())) {
+            throw new UncorrectedParametersException("Дата события не может быть раньше текущей даты");
+        }
+    }
+
     /**
      * Метод для получения подсчета подтвержденных запросов на участие в событиях.
      * Возвращает карту, где ключ — идентификатор события, а значение — список запросов
@@ -146,6 +339,10 @@ public class EventServiceImpl implements EventService {
         List<Request> requests = requestRepository.findAllByEventIdInAndStatus(events.stream()
                 .map(Event::getId).collect(Collectors.toList()), RequestStatus.CONFIRMED);
         return requests.stream().collect(Collectors.groupingBy(r -> r.getEvent().getId()));
+    }
+
+    private List<Request> getConfirmedRequests(Long eventId) {
+        return requestRepository.findAllByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
     }
 
     /**
@@ -159,7 +356,7 @@ public class EventServiceImpl implements EventService {
             oldEvent.setAnnotation(annotation);
             hasChanges = true;
         }
-        Long category = updateEvent.getCategoryId();
+        Long category = updateEvent.getCategory();
         if (category != null) {
             Category category1 = checkCategory(category);
             oldEvent.setCategory(category1);
@@ -172,7 +369,7 @@ public class EventServiceImpl implements EventService {
         }
         if (updateEvent.getLocation() != null) {
             Location location = LocationMapper.toLocation(updateEvent.getLocation());
-            oldEvent.setLocation(location);
+            oldEvent.setLocation(locationRepository.save(location));
             hasChanges = true;
         }
         Integer participantLimit = updateEvent.getParticipantLimit();
@@ -184,8 +381,8 @@ public class EventServiceImpl implements EventService {
             oldEvent.setPaid(updateEvent.getPaid());
             hasChanges = true;
         }
-        if (updateEvent.getRequestModerator() != null) {
-            oldEvent.setRequestModeration(updateEvent.getRequestModerator());
+        if (updateEvent.getRequestModeration() != null) {
+            oldEvent.setRequestModeration(updateEvent.getRequestModeration());
             hasChanges = true;
         }
         String title = updateEvent.getTitle();

@@ -1,13 +1,13 @@
 package ru.practicum.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.dto.location.LocationDto;
-import ru.practicum.utils.Update;
 
 import java.time.LocalDateTime;
 
@@ -16,18 +16,22 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 /**данные для создания нового события*/
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class NewEventDto {
-    @Size(min = 20, max = 2000, groups = Update.class)
+
+    @NotBlank
+    @Size(min = 20, max = 2000)
     private String annotation;
 
     @NotNull
     @Positive
-    private Long categoryId;
+    private Long category;
 
     @NotBlank
-    @Size(min = 20, max = 7000, groups = Update.class)
+    @Size(min = 20, max = 7000)
     private String description;
 
+    @Future
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
@@ -35,12 +39,13 @@ public class NewEventDto {
     private LocationDto location;
 
     private Boolean paid;
+
     @PositiveOrZero
     private Integer participantLimit;
 
-    private Boolean requestModerator;
+    private Boolean requestModeration;
 
-    @NotNull
+    //@NotNull
     @Size(min = 3, max = 120)
     private String title;
 }
