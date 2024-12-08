@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.dto.request.UpdatedRequestsDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.UncorrectedParametersException;
@@ -93,7 +94,7 @@ public class EventServiceImpl implements EventService {
         return result;
     }
 
-    public List<ParticipationRequestDto> confirmRequestsPrivate(Long userId, Long eventId, EventRequestStatusUpdateRequest updatedRequests) {
+    public UpdatedRequestsDto confirmRequestsPrivate(Long userId, Long eventId, EventRequestStatusUpdateRequest updatedRequests) {
 
         User user = checkUser(userId);
 
@@ -104,7 +105,7 @@ public class EventServiceImpl implements EventService {
         List<Long> ids = updatedRequests.getRequestIds().stream().toList();
 
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
-            return RequestMapper.toListRequestDto(requestRepository.findAllByIdIn(ids));
+            return RequestMapper.toUpdatedRequestsDto(RequestMapper.toListRequestDto(requestRepository.findAllByIdIn(ids)), List.of());
         }
 
         List<Request> requests = requestRepository.findAllByEventIdAndStatusAndIdIn(eventId, RequestStatus.PENDING, ids);
@@ -127,7 +128,11 @@ public class EventServiceImpl implements EventService {
 
         entityManager.clear();
 
-        return RequestMapper.toListRequestDto(requestRepository.findAllByIdIn(ids));
+        if (updatedRequests.getStatus().equals(RequestStatus.CONFIRMED)) {
+            return RequestMapper.toUpdatedRequestsDto(RequestMapper.toListRequestDto(requestRepository.findAllByIdIn(ids)), List.of());
+        } else {
+            return RequestMapper.toUpdatedRequestsDto(List.of(), RequestMapper.toListRequestDto(requestRepository.findAllByIdIn(ids)));
+        }
     }
 
 

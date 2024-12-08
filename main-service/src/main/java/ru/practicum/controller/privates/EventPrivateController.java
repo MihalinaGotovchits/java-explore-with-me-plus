@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.dto.request.UpdatedRequestsDto;
 import ru.practicum.service.EventService;
 
 import java.util.List;
@@ -56,7 +57,7 @@ public class EventPrivateController {
     }
 
     @PatchMapping("/{eventId}/requests")
-    public List<ParticipationRequestDto> confirmRequestsPrivate(@PathVariable Long userId, @PathVariable(value = "eventId") @Min(1) Long eventId,
+    public UpdatedRequestsDto confirmRequestsPrivate(@PathVariable Long userId, @PathVariable(value = "eventId") @Min(1) Long eventId,
                                                                 @RequestBody @Valid EventRequestStatusUpdateRequest updatedRequests) {
         log.info("Patch request with body = {}", updatedRequests);
         return eventService.confirmRequestsPrivate(userId, eventId, updatedRequests);
