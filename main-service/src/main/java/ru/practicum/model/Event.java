@@ -61,7 +61,7 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private State state;
 
-    @Transient
+    //@Transient
     private String title;
 
     @Transient
