@@ -2,12 +2,18 @@ package ru.practicum.repository;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import ru.practicum.model.Category;
 import ru.practicum.model.Event;
 
 import java.util.List;
 
-public interface EventRepository extends JpaRepository<Event, Long> {
+public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecificationExecutor {
+
+    List<Event> findByCategory(Category category);
+
+    List<Event> findAllByIdIn(List<Long> eventIds);
 
     @Query("SELECT e " +
             "FROM Event e " +
@@ -39,6 +45,5 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                                                       List<Integer> categories,
                                                       Boolean paid,
                                                       String rangeStart,
-                                                      Boolean onlyAvailable,
-                                                      Pageable pageable);
+                                                      Boolean onlyAvailable,Pageable pageable);
 }

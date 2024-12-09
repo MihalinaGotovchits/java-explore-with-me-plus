@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 /**представляет широту и долготу места проведения события*/
 public class LocationDto {
+
     @Min(-90)
     @Max(90)
     @NotNull
