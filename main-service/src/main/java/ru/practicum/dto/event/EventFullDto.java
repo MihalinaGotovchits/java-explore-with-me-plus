@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-/**полное описание события, включая все необходимые поля, такие как инициатор, местоположение и категории*/
 public class EventFullDto {
     private Long id;
 

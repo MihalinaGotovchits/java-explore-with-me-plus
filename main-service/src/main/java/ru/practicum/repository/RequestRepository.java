@@ -13,10 +13,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface RequestRepository extends JpaRepository<Request, Long> {
-    /**метод находит все запросы на основе списока идентификаторов событий (eventIds).
-     * и status — указывает статус запроса, по которому также будет выполняться фильтрация.
-     Метод возвращает список объектов Request — все запросы, которые соответствуют переданным идентификаторам
-     событий и указанному статусу.*/
     List<Request> findAllByEventIdInAndStatus(List<Long> eventIds, RequestStatus status);
 
     List<Request> findAllByEventIdAndStatus(Long eventId, RequestStatus status);

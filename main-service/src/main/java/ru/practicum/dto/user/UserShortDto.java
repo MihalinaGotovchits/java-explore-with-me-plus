@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-/**краткая информация о пользователе*/
 public class UserShortDto {
     private Long id;
 

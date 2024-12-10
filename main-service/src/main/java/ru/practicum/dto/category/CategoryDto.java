@@ -13,12 +13,11 @@ import ru.practicum.utils.Update;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-/**описание категории события с идентификатором и названием*/
 public class CategoryDto {
 
     private Long id;
 
-    @NotBlank(groups = {Create.class, Update.class})
-    @Size(min = 1, max = 50, groups = {Create.class, Update.class})
+    @NotBlank
+    @Size(min = 1, max = 50)
     private String name;
 }

@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-/**данные для создания нового события*/
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class NewEventDto {
 
@@ -45,7 +44,6 @@ public class NewEventDto {
 
     private Boolean requestModeration;
 
-    //@NotNull
     @Size(min = 3, max = 120)
     private String title;
 }

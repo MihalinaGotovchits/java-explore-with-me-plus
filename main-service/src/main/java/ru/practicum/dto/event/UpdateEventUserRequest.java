@@ -17,17 +17,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-/**данные для изменения события от имени пользователя*/
 public class UpdateEventUserRequest {
 
     @Size(min = 20, max = 2000)
     private String annotation;
 
-    //@NotNull
     @Positive
     private Long category;
 
-    //@NotBlank
     @Size(min = 20, max = 7000)
     private String description;
 
@@ -45,7 +42,6 @@ public class UpdateEventUserRequest {
 
     private UserEventStatus stateAction;
 
-    //@NotNull
     @Size(min = 3, max = 120)
     private String title;
 }

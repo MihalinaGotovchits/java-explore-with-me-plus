@@ -12,12 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-/**данные для изменения информации о подборке событий*/
 public class UpdateCompilationRequest {
-    /**
-     * список идентификаторов событий, которые принадлежат данной подборке.
-     * Используется для указания того, какие конкретные события должны быть добавлены или заменены в подборке
-     */
+
     private Long id;
 
     private List<Long> events;

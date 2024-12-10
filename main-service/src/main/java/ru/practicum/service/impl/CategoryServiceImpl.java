@@ -27,6 +27,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto addNewCategory(NewCategoryDto categoryDto) {
         Category category = CategoryMapper.toNewCategoryDto(categoryDto);
+
+        if (category.getName() != null) {
+            checkUniqNameCategoryIgnoreCase(category.getName());
+        }
+
         Category saveCategory = categoryRepository.save(category);
         return CategoryMapper.toCategoryDto(saveCategory);
     }

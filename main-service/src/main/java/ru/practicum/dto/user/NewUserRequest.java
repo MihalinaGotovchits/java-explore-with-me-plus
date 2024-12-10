@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-/**данные для добавления нового пользователя в бд*/
 public class NewUserRequest {
 
     @NotBlank
