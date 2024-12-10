@@ -110,7 +110,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getRequests(Long requestId) {
-        List<ParticipationRequestDto> dtos = requestRepository.getRequestsByRequester_Id(requestId);
+        List<ParticipationRequestDto> dtos = requestRepository.getRequestsByRequester_Id(requestId).stream()
+                .map(RequestMapper::toParticipationRequestDto)
+                .toList();
         log.info("getRequests - successfully");
         return dtos;
     }

@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.model.Request;
 import ru.practicum.status.request.RequestStatus;
 
@@ -21,7 +20,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     List<Request> findAllByEventIdAndStatus(Long eventId, RequestStatus status);
 
-    List<ParticipationRequestDto> getRequestsByRequester_Id(Long requestId);
+    List<Request> getRequestsByRequester_Id(Long requestId);
 
     Request getRequestByIdAndRequester_Id(Long requestId, Long requesterId);
 
