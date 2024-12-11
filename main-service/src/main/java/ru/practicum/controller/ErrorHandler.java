@@ -1,50 +1,39 @@
 package ru.practicum.controller;
 
-import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.practicum.dto.error.ErrorResponse;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.DataIntegrityViolationException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.UncorrectedParametersException;
-import ru.practicum.status.error.ErrorStatus;
 
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler
+    @ExceptionHandler({ConflictException.class, DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
-    private ErrorResponse handleDataIntegrityViolationException(final DataIntegrityViolationException exception) {
+    private ErrorResponse handleDataIntegrityViolationException(Exception e) {
         return ErrorResponse.builder()
-                .status(ErrorStatus.CONFLICT)
+                .status(HttpStatus.CONFLICT.toString())
                 .reason("Integrity constraint has been violated.")
-                .message(exception.getMessage())
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    private ErrorResponse handleThrowable(final RuntimeException e) {
-        return ErrorResponse.builder()
-                .status(ErrorStatus.FATAL_ERROR)
-                .reason("Unexpected reason")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    private ErrorResponse handleConflict(final ConflictException e) {
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    private ErrorResponse handleThrowable(Throwable e) {
         return ErrorResponse.builder()
-                .status(ErrorStatus.FATAL_ERROR)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.toString())
                 .reason("Unexpected reason")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
@@ -53,45 +42,29 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    private ErrorResponse handleNotFoundException(final NotFoundException e) {
+    private ErrorResponse handleNotFoundException(NotFoundException e) {
         return ErrorResponse.builder()
-                .status(ErrorStatus.NOT_FOUND)
+                .status(HttpStatus.NOT_FOUND.toString())
                 .reason("The required object was not found.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();
     }
 
-    @ExceptionHandler
+    @ExceptionHandler({MethodArgumentNotValidException.class, UncorrectedParametersException.class,
+            MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleConstraintViolationException(ConstraintViolationException e) {
+    public ErrorResponse handlerIncorrectParametersException(Exception e) {
+
+        String detailedMessage = e instanceof MethodArgumentNotValidException
+                ? "Validation failed for some fields."
+                : e.getMessage();
+
         return ErrorResponse.builder()
-                .status(ErrorStatus.FATAL_ERROR)
-                .reason("Unexpected reason")
-                .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.toString())
+                .message(detailedMessage)
+                .reason("Incorrect parameters")
                 .build();
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleHttpNotReadableException(HttpMessageNotReadableException e) {
-        return ErrorResponse.builder()
-                .status(ErrorStatus.FATAL_ERROR)
-                .reason("Unexpected reason")
-                .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleHttpNotReadableException(UncorrectedParametersException e) {
-        return ErrorResponse.builder()
-                .status(ErrorStatus.FATAL_ERROR)
-                .reason("Unexpected reason")
-                .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
 }

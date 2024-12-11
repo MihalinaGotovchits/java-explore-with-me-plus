@@ -50,7 +50,7 @@ public class StatClient extends BaseClient {
                 "end", encode(end),
                 "uris", String.join(",", uris),
                 "unique", unique);
-        return get("/stats?start={start}&end={end}&unigue={unigue}&uris={uris}", parameters);
+        return get("/stats?start={start}&end={end}&unique={unique}&uris={uris}", parameters);
     }
 
     private String encode(String value) {

@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-/**предназначен для передачи данных о пользователе с правами администратора*/
 public class AdminUserDto {
 
     private Long id;

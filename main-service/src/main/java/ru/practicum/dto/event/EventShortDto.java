@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-/**краткое описание события*/
 public class EventShortDto {
     private Long id;
 
