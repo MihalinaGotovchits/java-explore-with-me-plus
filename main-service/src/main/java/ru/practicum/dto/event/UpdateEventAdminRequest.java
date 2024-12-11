@@ -12,7 +12,6 @@ import org.hibernate.validator.constraints.Length;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.model.Location;
 import ru.practicum.status.event.AdminEventStatus;
-import ru.practicum.status.event.State;
 
 import java.time.LocalDateTime;
 
@@ -59,6 +58,4 @@ public class UpdateEventAdminRequest {
 
     @Valid
     private Location location;
-
-
 }
