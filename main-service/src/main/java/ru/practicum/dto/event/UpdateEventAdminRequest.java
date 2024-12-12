@@ -26,7 +26,7 @@ public class UpdateEventAdminRequest {
     @Size(min = 3, max = 120)
     private String title;
 
-    @Length(min = 20, max = 2000)
+    @Size(min = 20, max = 2000)
     private String annotation;
 
     @NotNull
@@ -38,7 +38,7 @@ public class UpdateEventAdminRequest {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
-    @Length(min = 20, max = 7000)
+    @Size(min = 20, max = 7000)
     private String description;
 
     private UserDto initiator;
