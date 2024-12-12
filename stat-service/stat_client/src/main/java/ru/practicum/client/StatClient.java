@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+/** TODO Добавить билдер URI*/
 @Service
 public class StatClient extends BaseClient {
 
@@ -50,7 +51,7 @@ public class StatClient extends BaseClient {
                 "end", encode(end),
                 "uris", String.join(",", uris),
                 "unique", unique);
-        return get("/stats?start={start}&end={end}&unigue={unigue}&uris={uris}", parameters);
+        return get("/stats?start={start}&end={end}&unique={unique}&uris={uris}", parameters);
     }
 
     private String encode(String value) {

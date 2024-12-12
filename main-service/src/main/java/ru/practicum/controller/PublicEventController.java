@@ -7,8 +7,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.event.EventParam;
 import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.dto.event.sort.SortType;
+import ru.practicum.dto.event.sort.SortTypeFactory;
 import ru.practicum.service.EventService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -30,10 +33,10 @@ public class PublicEventController {
     public List<EventShortDto> getEvents(@RequestParam(required = false) String text,
                                          @RequestParam(required = false) List<Integer> categories,
                                          @RequestParam(required = false) Boolean paid,
-                                         @RequestParam(required = false) String rangeStart,
-                                         @RequestParam(required = false) String rangeEnd,
+                                         @RequestParam(required = false) LocalDateTime rangeStart,
+                                         @RequestParam(required = false) LocalDateTime rangeEnd,
                                          @RequestParam(defaultValue = "false") Boolean onlyAvailable,
-                                         @RequestParam(required = false) String sort,
+                                         @RequestParam(required = false, defaultValue = "EVENT_DATE") SortType sort,
                                          @RequestParam(required = false, defaultValue = "0") Integer from,
                                          @RequestParam(required = false, defaultValue = "10") Integer size) {
         log.info("Get events.");
@@ -44,8 +47,7 @@ public class PublicEventController {
                 .rangeStart(rangeStart)
                 .rangeEnd(rangeEnd)
                 .onlyAvailable(onlyAvailable)
-                .sort(sort)
-                .pageable(PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, sort.toLowerCase())))
+                .pageable(PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, SortTypeFactory.getSortColumn(sort))))
                 .build();
         return eventService.getEvents(eventParam);
     }

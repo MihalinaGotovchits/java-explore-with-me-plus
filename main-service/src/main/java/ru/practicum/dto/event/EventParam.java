@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -16,9 +17,8 @@ public class EventParam {
     private String text;
     private List<Integer> categories;
     private Boolean paid;
-    private String rangeStart;
-    private String rangeEnd;
+    private LocalDateTime rangeStart;
+    private LocalDateTime rangeEnd;
     private Boolean onlyAvailable;
-    private String sort;
     private Pageable pageable;
 }

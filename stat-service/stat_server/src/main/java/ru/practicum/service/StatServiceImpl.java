@@ -34,6 +34,10 @@ public class StatServiceImpl implements StatService {
     public List<StatResponseDto> readStat(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
         log.info("readStat - invoked");
 
+        if (start == null && end == null) {
+            return getStat(uris, unique);
+        }
+
         if (start.isAfter(end)) {
             log.error("Время начала не может быть позже времени завершения");
             throw new WrongTimeException("Время начала не может быть позже времени завершения");
@@ -55,6 +59,14 @@ public class StatServiceImpl implements StatService {
                 log.info("readStat - success - unique = false, uris not empty");
                 return statRepository.findAllByTimestampBetweenStartAndEndWithUrisIpNotUnique(start, end, uris);
             }
+        }
+    }
+
+    private List<StatResponseDto> getStat(List<String> uris, boolean unique) {
+        if (unique) {
+            return statRepository.findAllWithUniqueIp(uris);
+        } else {
+            return statRepository.findAllWithIp(uris);
         }
     }
 }

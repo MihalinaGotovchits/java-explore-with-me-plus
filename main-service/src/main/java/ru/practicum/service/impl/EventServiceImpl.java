@@ -1,5 +1,6 @@
 package ru.practicum.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
@@ -8,7 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import ru.practicum.client.StatClient;
+import ru.practicum.dto.StatDto;
+import ru.practicum.dto.StatResponseDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.request.ParticipationRequestDto;
@@ -19,8 +24,10 @@ import ru.practicum.exception.UncorrectedParametersException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.mapper.LocationMapper;
 import ru.practicum.mapper.RequestMapper;
+import ru.practicum.mapper.UriMapper;
 import ru.practicum.model.*;
 import ru.practicum.repository.*;
+import ru.practicum.repository.specification.EventSpecification;
 import ru.practicum.service.EventService;
 import ru.practicum.status.event.AdminEventStatus;
 import ru.practicum.status.event.State;
@@ -47,6 +54,10 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
 
     private final LocationRepository locationRepository;
+
+    private final StatClient statClient;
+
+    private final ObjectMapper objectMapper;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -303,36 +314,37 @@ public class EventServiceImpl implements EventService {
      */
     @Override
     public List<EventShortDto> getEvents(EventParam eventParam) {
-        if (eventParam.getRangeStart() == null && eventParam.getRangeEnd() == null) {
-            return eventRepository.findAllByTextAndCategoryOnlyAvailable(
-                            eventParam.getText(),
-                            eventParam.getCategories(),
-                            eventParam.getPaid(),
-                            String.valueOf(LocalDateTime.now()),
-                            eventParam.getOnlyAvailable(),
-                            eventParam.getPageable())
-                    .stream()
-                    .map(EventMapper::toEventShortDto)
-                    .toList();
-        }
-        return eventRepository.findAllByTextAndCategoryInRangeOnlyAvailable(
-                        eventParam.getText(),
-                        eventParam.getCategories(),
-                        eventParam.getPaid(),
-                        eventParam.getRangeStart(),
-                        eventParam.getRangeEnd(),
-                        eventParam.getOnlyAvailable(),
-                        eventParam.getPageable())
-                .stream()
+        StatDto statDto = StatDto.builder()
+                .app("ewm-main-service")
+                .uri("/events")
+                .ip("someIp")
+                .build();
+
+        statClient.addStatEvent(statDto);
+        statClient.readStatEvent(null, null, UriMapper.toUris(eventParam.getCategories(),"/events"), false);
+        return eventRepository.findAll(EventSpecification.byEventParam(eventParam)).stream()
                 .map(EventMapper::toEventShortDto)
                 .toList();
     }
 
     @Override
     public EventShortDto getEventById(Long id) {
-        return eventRepository.findById(id)
+        StatDto statDto = StatDto.builder()
+                .app("ewm-main-service")
+                .uri("/events/" + id)
+                .ip("someIp")
+                .build();
+
+        statClient.addStatEvent(statDto);
+
+        List<StatResponseDto> dtos = parseResponseEntity(statClient.readStatEvent(null, null, UriMapper.toUris(List.of(id), "/events"), false));
+        Long count = dtos.stream().mapToLong(StatResponseDto::getHits).count();
+
+        EventShortDto eventShortDto= eventRepository.findById(id)
                 .map(EventMapper::toEventShortDto)
                 .orElseThrow(() -> new EntityNotFoundException("Event with id " + id + " not found"));
+        eventShortDto.setViews(count);
+        return eventShortDto;
     }
 
     private void checkEventInitiator(Event event, User user) {
@@ -434,4 +446,17 @@ public class EventServiceImpl implements EventService {
         return oldEvent;
     }
 
+    private List<StatResponseDto> parseResponseEntity(ResponseEntity<Object> responseEntity) {
+        if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
+            // Преобразование объекта в List<StatResponseDto>
+            try {
+                return objectMapper.convertValue(responseEntity.getBody(),
+                        objectMapper.getTypeFactory().constructCollectionType(List.class, StatResponseDto.class));
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Failed to parse response body to List<StatResponseDto>", e);
+            }
+        } else {
+            throw new RuntimeException("Failed to get stats: " + responseEntity.getStatusCode());
+        }
+    }
 }

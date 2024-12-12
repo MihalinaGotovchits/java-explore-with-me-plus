@@ -39,4 +39,19 @@ public interface StatRepository extends JpaRepository<Stat, Long> {
             "ORDER BY count(stat.ip) desc")
     List<StatResponseDto> findAllByTimestampBetweenStartAndEndWithUrisIpNotUnique(LocalDateTime start, LocalDateTime end,
                                                                                   List<String> uris);
+
+    @Query("SELECT new ru.practicum.dto.StatResponseDto(stat.app, stat.uri, count(distinct stat.ip)) " +
+            "FROM Stat AS stat " +
+            "WHERE stat.uri IN :uris " +
+            "GROUP BY stat.app, stat.uri " +
+            "ORDER BY count(distinct stat.ip) desc")
+    List<StatResponseDto> findAllWithUniqueIp(List<String> uris);
+
+    @Query("SELECT new ru.practicum.dto.StatResponseDto(stat.app, stat.uri, count(stat.ip)) " +
+            "FROM Stat AS stat " +
+            "WHERE stat.uri IN :uris " +
+            "GROUP BY stat.app, stat.uri " +
+            "ORDER BY count(stat.ip) desc")
+    List<StatResponseDto> findAllWithIp(List<String> uris);
+
 }
