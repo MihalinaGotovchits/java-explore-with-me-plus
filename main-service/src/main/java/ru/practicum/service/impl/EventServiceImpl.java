@@ -56,7 +56,7 @@ public class EventServiceImpl implements EventService {
                 searchEventParamsAdmin.getSize());
         Specification<Event> specification = Specification.where(null);
 
-        List<Long> users = searchEventParamsAdmin.getUserIds();
+        List<Long> users = searchEventParamsAdmin.getUsers();
         List<String> states = searchEventParamsAdmin.getStates();
         List<Long> categories = searchEventParamsAdmin.getCategories();
         LocalDateTime rangeEnd = searchEventParamsAdmin.getRangeEnd();
@@ -186,6 +186,7 @@ public class EventServiceImpl implements EventService {
         if (action != null) {
             if (AdminEventStatus.PUBLISH_EVENT.equals(action)) {
                 eventForUpdate.setState(State.PUBLISHED);
+                eventForUpdate.setPublishedOn(LocalDateTime.now());
                 hasChanges = true;
             } else if (AdminEventStatus.REJECT_EVENT.equals(action)) {
                 eventForUpdate.setState(State.CANCELED);

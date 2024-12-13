@@ -38,7 +38,7 @@ public class EventMapper {
                 .title(event.getTitle())
                 .description(event.getDescription())
                 .createdOn(event.getCreateOn())
-                .initiator(UserMapper.userDto(event.getInitiator()))
+                .initiator(UserMapper.userShortDto(event.getInitiator()))
                 .confirmedRequests(event.getConfirmedRequests())
                 .views(event.getViews())
                 .state(event.getState())
@@ -49,10 +49,12 @@ public class EventMapper {
                 .category((event.getCategory() == null) ? new CategoryDto() : CategoryMapper.toCategoryDto(event.getCategory()))
                 .eventDate(event.getEventDate())
                 .location(LocationMapper.toLocationDto(event.getLocation()))
+                //пока не подключена статистика
+                .views(0)
                 .build();
 
         if (event.getPublishedOn() != null) {
-            build.setPublishedOn(LocalDateTime.parse(event.getPublishedOn().format(FORMATTER)));
+            build.setPublishedOn(event.getPublishedOn());
         }
         return build;
     }
@@ -63,7 +65,7 @@ public class EventMapper {
                 .title(event.getTitle())
                 .description(event.getDescription())
                 .createdOn(event.getCreateOn())
-                .initiator(UserMapper.userDto(event.getInitiator()))
+                .initiator(UserMapper.userShortDto(event.getInitiator()))
                 .confirmedRequests(event.getConfirmedRequests())
                 .views(event.getViews())
                 .state(event.getState())
@@ -75,10 +77,12 @@ public class EventMapper {
                 .eventDate(event.getEventDate())
                 .location(LocationMapper.toLocationDto(event.getLocation()))
                 .confirmedRequests(requests.size())
+                //пока не подключена статистика
+                .views(0)
                 .build();
 
         if (event.getPublishedOn() != null) {
-            build.setPublishedOn(LocalDateTime.parse(event.getPublishedOn().format(FORMATTER)));
+            build.setPublishedOn(event.getPublishedOn());
         }
         return build;
     }
@@ -103,7 +107,7 @@ public class EventMapper {
     public NewEventDto toNewEventDto(UpdateEventAdminRequest adminRequest) {
         return NewEventDto.builder()
                 .annotation(adminRequest.getAnnotation())
-                .category(adminRequest.getCategoryId())
+                .category(adminRequest.getCategory())
                 .description(adminRequest.getDescription())
                 .eventDate(adminRequest.getEventDate())
                 .location((adminRequest.getLocation() == null) ? null : LocationMapper.toLocationDto(adminRequest.getLocation()))
