@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.DataIntegrityViolationException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.RequestMapper;
@@ -41,7 +42,7 @@ public class RequestServiceImpl implements RequestService {
 
         requestRepository.getRequestByRequester_IdAndEvent_Id(userId, eventId)
                 .ifPresent(result -> {
-                    throw new NotFoundException(String.format("Request with userId=%d and eventId=%d", userId, eventId));
+                    throw new ConflictException(String.format("Request with userId=%d and eventId=%d", userId, eventId));
                 });
 
         if (event.getInitiator().getId().equals(userId)) {
@@ -54,7 +55,8 @@ public class RequestServiceImpl implements RequestService {
                     "You can't participate in an unpublished event.");
         }
 
-        if (event.getParticipantLimit() <= requestRepository.findAllByEventIdAndStatus(eventId, RequestStatus.CONFIRMED).size()) {
+        if (event.getParticipantLimit() <= requestRepository.findAllByEventIdAndStatus(eventId, RequestStatus.CONFIRMED).size()
+            && event.getParticipantLimit() != 0) {
             throw new DataIntegrityViolationException(
                     "The event has reached its participation request limit.");
         }
@@ -63,7 +65,7 @@ public class RequestServiceImpl implements RequestService {
                 .requester(user)
                 .event(event)
                 .created(LocalDateTime.now())
-                .status(RequestStatus.PENDING)
+                .status((event.getParticipantLimit() == 0) ? RequestStatus.CONFIRMED : RequestStatus.PENDING)
                 .build();
 
         if (Boolean.FALSE.equals(event.getRequestModeration())) {
@@ -78,7 +80,9 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getRequests(Long requestId) {
-        List<ParticipationRequestDto> dtos = requestRepository.getRequestsByRequester_Id(requestId);
+        List<ParticipationRequestDto> dtos = requestRepository.getRequestsByRequester_Id(requestId).stream()
+                .map(RequestMapper::toParticipationRequestDto)
+                .toList();
         log.info("getRequests - successfully");
         return dtos;
     }
