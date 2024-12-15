@@ -8,11 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import org.hibernate.validator.constraints.Length;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.model.Location;
 import ru.practicum.status.event.AdminEventStatus;
-import ru.practicum.status.event.State;
 
 import java.time.LocalDateTime;
 
@@ -27,19 +25,18 @@ public class UpdateEventAdminRequest {
     @Size(min = 3, max = 120)
     private String title;
 
-    @Length(min = 20, max = 2000)
+    @Size(min = 20, max = 2000)
     private String annotation;
 
-    @NotNull
     @Positive
-    private Long categoryId;
+    private Long category;
 
     private Boolean paid;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
-    @Length(min = 20, max = 7000)
+    @Size(min = 20, max = 7000)
     private String description;
 
     private UserDto initiator;
@@ -59,6 +56,4 @@ public class UpdateEventAdminRequest {
 
     @Valid
     private Location location;
-
-
 }

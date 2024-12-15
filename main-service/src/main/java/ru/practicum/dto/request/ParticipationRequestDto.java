@@ -15,14 +15,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonPropertyOrder({"created", "event", "id", "requester", "status"})
-/**данные заявки на участие в событии*/
 public class ParticipationRequestDto {
 
     private Long id;
 
     private Long event;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime created;
 
     private Long requester;

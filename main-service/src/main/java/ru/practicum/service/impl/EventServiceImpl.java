@@ -27,6 +27,7 @@ import ru.practicum.status.event.UserEventStatus;
 import ru.practicum.status.request.RequestStatus;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,44 +52,126 @@ public class EventServiceImpl implements EventService {
     private EntityManager entityManager;
 
     @Override
-    public List<EventFullDto> getAllEventFromAdmin(SearchEventParamAdmin searchEventParamAdmin) {
-        PageRequest page = PageRequest.of(searchEventParamAdmin.getFrom() / searchEventParamAdmin.getSize(),
-                searchEventParamAdmin.getSize());
+    public List<EventFullDto> getAllEventPublic(SearchEventParamPublic searchEventParamPublic) {
+
+        LocalDateTime rangeEnd = searchEventParamPublic.getRangeEnd();
+        LocalDateTime rangeStart = searchEventParamPublic.getRangeStart();
+
+        if(rangeEnd != null && rangeStart != null && rangeEnd.isBefore(rangeStart)) {
+            throw new UncorrectedParametersException("rangeEnd is before rangeStart");
+        }
+
+        PageRequest pageable = PageRequest.of(searchEventParamPublic.getFrom() / searchEventParamPublic.getSize(),
+                searchEventParamPublic.getSize());
         Specification<Event> specification = Specification.where(null);
 
-        List<Long> users = searchEventParamAdmin.getUserIds();
-        List<String> states = searchEventParamAdmin.getStates();
-        List<Long> categories = searchEventParamAdmin.getCategories();
-        LocalDateTime rangeStart = searchEventParamAdmin.getRangeStart();
-        LocalDateTime rangeEnd = searchEventParamAdmin.getRangeEnd();
+        String text = searchEventParamPublic.getText();
+        List<Long> categories = searchEventParamPublic.getCategories();
+        Boolean paid = searchEventParamPublic.getPaid();
+        Boolean onlyAvailable = searchEventParamPublic.getOnlyAvailable();
+        Sort sort = searchEventParamPublic.getSort();
 
-        if (users != null && !users.isEmpty()) {
-            specification = specification.and(((root, query, criteriaBuilder) ->
-                    root.get("initiator").get("id").in(users)));
-        }
-        if (states != null && !states.isEmpty()) {
+        if (text != null) {
             specification = specification.and((root, query, criteriaBuilder) ->
-                    root.get("eventStatus").as(String.class).in(states));
+                    criteriaBuilder.or(
+                            criteriaBuilder.like(
+                                    criteriaBuilder.lower(root.get("description")),
+                                    "%" + text.toLowerCase() + "%"
+                            ),
+                            criteriaBuilder.like(
+                                    criteriaBuilder.lower(root.get("annotation")),
+                                    "%" + text.toLowerCase() + "%"
+                            )
+                    )
+            );
         }
+
         if (categories != null && !categories.isEmpty()) {
             specification = specification.and((root, query, criteriaBuilder) ->
                     root.get("category").get("id").in(categories));
+        }
+        if (paid != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("paid"), paid));
+        }
+        if (rangeEnd != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
         }
         if (rangeStart != null) {
             specification = specification.and((root, query, criteriaBuilder) ->
                     criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
         }
+
+        Page<Event> events = eventRepository.findAll(specification, pageable);
+
+        List<Event> eventsResponse = events.toList();
+
+        if (onlyAvailable != null && onlyAvailable) {
+            eventsResponse = getAvailableOnly(eventsResponse);
+        } else {
+            Map<Long, List<Request>> confirmedRequestsCountMap = getConfirmedRequestsCount(events.toList());
+            for (Event event : eventsResponse) {
+                List<Request> requests = confirmedRequestsCountMap.getOrDefault(event.getId(), List.of());
+                event.setConfirmedRequests(requests.size());
+            }
+        }
+
+        //Пока заглушка без статистики
+        //здесь надо запросить количество просмотров, не забыть потом удалить нули в мапперах
+        setViewsCount(eventsResponse);
+
+        if (sort == Sort.VIEWS) {
+            return eventsResponse.stream()
+                    .sorted(Comparator.comparing(Event::getViews))
+                    .map(EventMapper::toEventFullDto).toList();
+        } else {
+            return eventsResponse.stream()
+                    .sorted(Comparator.comparing(Event::getEventDate))
+                    .map(EventMapper::toEventFullDto).toList();
+        }
+    }
+
+    @Override
+    public List<EventFullDto> getAllEventFromAdmin(SearchEventParamAdmin searchEventParamsAdmin) {
+        PageRequest pageable = PageRequest.of(searchEventParamsAdmin.getFrom() / searchEventParamsAdmin.getSize(),
+                searchEventParamsAdmin.getSize());
+        Specification<Event> specification = Specification.where(null);
+
+        List<Long> users = searchEventParamsAdmin.getUsers();
+        List<String> states = searchEventParamsAdmin.getStates();
+        List<Long> categories = searchEventParamsAdmin.getCategories();
+        LocalDateTime rangeEnd = searchEventParamsAdmin.getRangeEnd();
+        LocalDateTime rangeStart = searchEventParamsAdmin.getRangeStart();
+
+        if (users != null && !users.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("initiator").get("id").in(users));
+        }
+        if (states != null && !states.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("state").as(String.class).in(states));
+        }
+        if (categories != null && !categories.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("category").get("id").in(categories));
+        }
         if (rangeEnd != null) {
             specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeEnd));
+                    criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
         }
-        Page<Event> events = eventRepository.findAll(specification, page);
+        if (rangeStart != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
+        }
+        Page<Event> events = eventRepository.findAll(specification, pageable);
 
-        List<EventFullDto> result = events.getContent().stream()
-                .map(EventMapper::toEventFullDto).collect(Collectors.toList());
-        Map<Long, List<Request>> confirmedRequestsCount = getConfirmedRequestsCount(events.toList());
+        List<EventFullDto> result = events.getContent()
+                .stream().map(EventMapper::toEventFullDto).collect(Collectors.toList());
+
+        Map<Long, List<Request>> confirmedRequestsCountMap = getConfirmedRequestsCount(events.toList());
         for (EventFullDto event : result) {
-            List<Request> requests = confirmedRequestsCount.getOrDefault(event.getId(), List.of());
+            List<Request> requests = confirmedRequestsCountMap.getOrDefault(event.getId(), List.of());
             event.setConfirmedRequests(requests.size());
         }
         return result;
@@ -150,6 +233,21 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public EventFullDto getEvent(Long id) {
+
+        Event event = eventRepository.findByIdAndState(id, State.PUBLISHED);
+
+        if (event == null) {
+            throw new NotFoundException("Не найдено опубликованного события по заданному id");
+        }
+
+        //здесь надо запросить количество просмотров, не забыть потом удалить нули в мапперах
+
+        return EventMapper.toEventFullDto(event, getConfirmedRequests(event.getId()));
+
+    }
+
+    @Override
     public EventFullDto updateEventFromAdmin(Long eventId, UpdateEventAdminRequest updateEvent) {
         Event oldEvent = checkEvent(eventId);
         if (oldEvent.getState().equals(State.PUBLISHED) || oldEvent.getState().equals(State.CANCELED)) {
@@ -168,13 +266,24 @@ public class EventServiceImpl implements EventService {
                 throw new UncorrectedParametersException("Некорректные параметры даты. Дата начала изменяемого" +
                         "события должна быть не ранне, чем за час от даты его публикации.");
             }
-            eventForUpdate.setEventDate(updateEvent.getEventDate());
+            eventForUpdate.setEventDate(eventDate);
             hasChanges = true;
         }
+        LocalDateTime publishedOn = updateEvent.getPublishedOn();
+        if (publishedOn != null) {
+            if (publishedOn.isAfter(LocalDateTime.now())) {
+                throw new UncorrectedParametersException("Некорректные параметры даты. Дата публикации " +
+                        "события должна быть не позже, чем нынешние дата и время.");
+            }
+            eventForUpdate.setPublishedOn(publishedOn);
+            hasChanges = true;
+        }
+
         AdminEventStatus action = updateEvent.getStateAction();
         if (action != null) {
             if (AdminEventStatus.PUBLISH_EVENT.equals(action)) {
                 eventForUpdate.setState(State.PUBLISHED);
+                eventForUpdate.setPublishedOn(LocalDateTime.now());
                 hasChanges = true;
             } else if (AdminEventStatus.REJECT_EVENT.equals(action)) {
                 eventForUpdate.setState(State.CANCELED);
@@ -280,6 +389,7 @@ public class EventServiceImpl implements EventService {
             event.setRequestModeration(true);
         }
 
+        event.setCreateOn(LocalDateTime.now());
         return EventMapper.toEventFullDto(eventRepository.save(event));
     }
 
@@ -331,24 +441,36 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    /**
-     * Метод для получения подсчета подтвержденных запросов на участие в событиях.
-     * Возвращает карту, где ключ — идентификатор события, а значение — список запросов
-     */
     private Map<Long, List<Request>> getConfirmedRequestsCount(List<Event> events) {
         List<Request> requests = requestRepository.findAllByEventIdInAndStatus(events.stream()
                 .map(Event::getId).collect(Collectors.toList()), RequestStatus.CONFIRMED);
         return requests.stream().collect(Collectors.groupingBy(r -> r.getEvent().getId()));
     }
 
+    private List<Event> getAvailableOnly(List<Event> events) {
+        List<Request> requests = requestRepository.findAllByEventIdInAndStatus(events.stream()
+                .map(Event::getId).collect(Collectors.toList()), RequestStatus.CONFIRMED);
+        final Map<Long, List<Request>> requestsByEvent = requests.stream().collect(Collectors.groupingBy(r -> r.getEvent().getId()));
+
+        List<Event> events1 = events.stream().filter(event -> requestsByEvent.containsKey(event.getId())
+                && (event.getParticipantLimit() == null || event.getParticipantLimit() > requestsByEvent.get(event.getId()).size())).collect(Collectors.toList());
+
+        for (Event event : events1) {
+            event.setConfirmedRequests(requestsByEvent.get(event.getId()).size());
+        }
+        return events1;
+    }
+
     private List<Request> getConfirmedRequests(Long eventId) {
         return requestRepository.findAllByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
     }
 
-    /**
-     * Метод, который выполняет универсальное обновление полей события на основе данных, полученных из DTO NewEventDto.
-     * Проверяет, были ли изменения, и обновляет только измененные поля.
-     */
+    private void setViewsCount(List<Event> events) {
+        for (Event event : events) {
+            event.setViews(0);
+        }
+    }
+
     private Event universalUpdate(Event oldEvent, NewEventDto updateEvent) {
         boolean hasChanges = false;
         String annotation = updateEvent.getAnnotation();
