@@ -16,7 +16,7 @@ import ru.practicum.exception.UncorrectedParametersException;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
-public class ErrorHandler {
+public class ErrorExceptionHandler {
 
     @ExceptionHandler({ConflictException.class, DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)

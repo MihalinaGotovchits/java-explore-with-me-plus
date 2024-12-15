@@ -2,12 +2,18 @@ package ru.practicum.service.impl;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import ru.practicum.client.StatClient;
+import ru.practicum.dto.StatDto;
+import ru.practicum.dto.StatResponseDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.request.ParticipationRequestDto;
@@ -21,16 +27,15 @@ import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.*;
 import ru.practicum.repository.*;
 import ru.practicum.service.EventService;
+import ru.practicum.service.StatService;
 import ru.practicum.status.event.AdminEventStatus;
 import ru.practicum.status.event.State;
 import ru.practicum.status.event.UserEventStatus;
 import ru.practicum.status.request.RequestStatus;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,11 +53,18 @@ public class EventServiceImpl implements EventService {
 
     private final LocationRepository locationRepository;
 
+    private final StatClient statClient;
+
+    private final StatService statService;
+
     @PersistenceContext
     private EntityManager entityManager;
 
+    @Value("${server.application.name:ewm-service}")
+    private String applicationName;
+
     @Override
-    public List<EventFullDto> getAllEventPublic(SearchEventParamPublic searchEventParamPublic) {
+    public List<EventFullDto> getAllEventPublic(SearchEventParamPublic searchEventParamPublic/*, HttpServletRequest httpServletRequest*/) {
 
         LocalDateTime rangeEnd = searchEventParamPublic.getRangeEnd();
         LocalDateTime rangeStart = searchEventParamPublic.getRangeStart();
@@ -60,6 +72,8 @@ public class EventServiceImpl implements EventService {
         if(rangeEnd != null && rangeStart != null && rangeEnd.isBefore(rangeStart)) {
             throw new UncorrectedParametersException("rangeEnd is before rangeStart");
         }
+        //передаем данные клиенту в сервис статистики
+        //addStatClient(httpServletRequest);
 
         PageRequest pageable = PageRequest.of(searchEventParamPublic.getFrom() / searchEventParamPublic.getSize(),
                 searchEventParamPublic.getSize());
@@ -131,6 +145,38 @@ public class EventServiceImpl implements EventService {
                     .map(EventMapper::toEventFullDto).toList();
         }
     }
+
+       /* // Получаем статистику для отображения
+
+        List<String> uris = eventsResponse.stream()
+
+                .map(event -> "/events/" + event.getId())
+
+                .collect(Collectors.toList());
+
+
+        // Запрашиваем статистику по событиям
+
+        List<StatResponseDto> statResponses = statService.readStat(
+                rangeStart.format(DateTimeFormatter.ISO_DATE_TIME),
+                rangeEnd.format(DateTimeFormatter.ISO_DATE_TIME),
+                uris,
+                false).getBody();
+
+        // Устанавливаем количество просмотров на события
+        for (Event event : eventsResponse) {
+
+            StatResponseDto stat = statResponses.stream()
+                    .filter(s -> s.getUri().equals("/events/" + event.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (stat != null) {
+                event.setViews(stat.getHits().intValue()); // Устанавливаем количество просмотров для события
+            }
+
+        }
+*/
 
     @Override
     public List<EventFullDto> getAllEventFromAdmin(SearchEventParamAdmin searchEventParamsAdmin) {
@@ -516,5 +562,14 @@ public class EventServiceImpl implements EventService {
             oldEvent = null;
         }
         return oldEvent;
+    }
+
+    private void addStatClient(HttpServletRequest httpServletRequest) {
+        statClient.addStatEvent(StatDto.builder()
+                        .app(applicationName)
+                        .uri(httpServletRequest.getRequestURI())
+                        .ip(httpServletRequest.getRemoteAddr())
+                        .timestamp(LocalDateTime.now())
+                .build());
     }
 }
