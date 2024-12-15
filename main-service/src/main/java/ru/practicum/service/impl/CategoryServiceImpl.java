@@ -2,6 +2,8 @@ package ru.practicum.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.category.NewCategoryDto;
@@ -74,8 +76,10 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryDto> getCategories(Integer from, Integer size) {
-        PageRequest pageRequest = PageRequest.of(from / size, size);
-        return categoryRepository.findAll(pageRequest)
+
+        Sort sort = Sort.by(Sort.Direction.DESC, "id");
+        Pageable pageable = PageRequest.of(from, size, sort);
+        return categoryRepository.findAll(pageable)
                 .stream().map(CategoryMapper::toCategoryDto).collect(Collectors.toList());
     }
 

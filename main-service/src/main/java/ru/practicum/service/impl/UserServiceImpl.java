@@ -3,6 +3,8 @@ package ru.practicum.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.user.NewUserRequest;
@@ -42,10 +44,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserDto> getListUsers(List<Long> userIds, Integer from, Integer size) {
-        PageRequest page = PageRequest.of(from / size, size);
+        Sort sort = Sort.by(Sort.Direction.ASC, "id");
+        Pageable pageable = PageRequest.of(from, size, sort);
         log.info("getAllUsers - successfully");
-        return (userIds != null) ? userRepository.findByIdIn(userIds, page).stream()
-                .map(UserMapper::userDto).collect(Collectors.toList()) : userRepository.findAll(page)
+        return (userIds != null) ? userRepository.findByIdIn(userIds, pageable).stream()
+                .map(UserMapper::userDto).collect(Collectors.toList()) : userRepository.findAll(pageable)
                 .stream().map(UserMapper::userDto).collect(Collectors.toList());
     }
 

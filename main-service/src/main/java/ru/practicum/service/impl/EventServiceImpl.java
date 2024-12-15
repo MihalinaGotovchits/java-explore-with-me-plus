@@ -27,6 +27,7 @@ import ru.practicum.status.event.UserEventStatus;
 import ru.practicum.status.request.RequestStatus;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,12 +52,93 @@ public class EventServiceImpl implements EventService {
     private EntityManager entityManager;
 
     @Override
+    public List<EventFullDto> getAllEventPublic(SearchEventParamPublic searchEventParamPublic) {
+
+        LocalDateTime rangeEnd = searchEventParamPublic.getRangeEnd();
+        LocalDateTime rangeStart = searchEventParamPublic.getRangeStart();
+
+        if(rangeEnd != null && rangeStart != null && rangeEnd.isBefore(rangeStart)) {
+            throw new UncorrectedParametersException("rangeEnd is before rangeStart");
+        }
+
+        PageRequest pageable = PageRequest.of(searchEventParamPublic.getFrom() / searchEventParamPublic.getSize(),
+                searchEventParamPublic.getSize());
+        Specification<Event> specification = Specification.where(null);
+
+        String text = searchEventParamPublic.getText();
+        List<Long> categories = searchEventParamPublic.getCategories();
+        Boolean paid = searchEventParamPublic.getPaid();
+        Boolean onlyAvailable = searchEventParamPublic.getOnlyAvailable();
+        Sort sort = searchEventParamPublic.getSort();
+
+        if (text != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.or(
+                            criteriaBuilder.like(
+                                    criteriaBuilder.lower(root.get("description")),
+                                    "%" + text.toLowerCase() + "%"
+                            ),
+                            criteriaBuilder.like(
+                                    criteriaBuilder.lower(root.get("annotation")),
+                                    "%" + text.toLowerCase() + "%"
+                            )
+                    )
+            );
+        }
+
+        if (categories != null && !categories.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("category").get("id").in(categories));
+        }
+        if (paid != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("paid"), paid));
+        }
+        if (rangeEnd != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
+        }
+        if (rangeStart != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
+        }
+
+        Page<Event> events = eventRepository.findAll(specification, pageable);
+
+        List<Event> eventsResponse = events.toList();
+
+        if (onlyAvailable != null && onlyAvailable) {
+            eventsResponse = getAvailableOnly(eventsResponse);
+        } else {
+            Map<Long, List<Request>> confirmedRequestsCountMap = getConfirmedRequestsCount(events.toList());
+            for (Event event : eventsResponse) {
+                List<Request> requests = confirmedRequestsCountMap.getOrDefault(event.getId(), List.of());
+                event.setConfirmedRequests(requests.size());
+            }
+        }
+
+        //Пока заглушка без статистики
+        //здесь надо запросить количество просмотров, не забыть потом удалить нули в мапперах
+        setViewsCount(eventsResponse);
+
+        if (sort == Sort.VIEWS) {
+            return eventsResponse.stream()
+                    .sorted(Comparator.comparing(Event::getViews))
+                    .map(EventMapper::toEventFullDto).toList();
+        } else {
+            return eventsResponse.stream()
+                    .sorted(Comparator.comparing(Event::getEventDate))
+                    .map(EventMapper::toEventFullDto).toList();
+        }
+    }
+
+    @Override
     public List<EventFullDto> getAllEventFromAdmin(SearchEventParamAdmin searchEventParamsAdmin) {
         PageRequest pageable = PageRequest.of(searchEventParamsAdmin.getFrom() / searchEventParamsAdmin.getSize(),
                 searchEventParamsAdmin.getSize());
         Specification<Event> specification = Specification.where(null);
 
-        List<Long> users = searchEventParamsAdmin.getUserIds();
+        List<Long> users = searchEventParamsAdmin.getUsers();
         List<String> states = searchEventParamsAdmin.getStates();
         List<Long> categories = searchEventParamsAdmin.getCategories();
         LocalDateTime rangeEnd = searchEventParamsAdmin.getRangeEnd();
@@ -151,6 +233,21 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public EventFullDto getEvent(Long id) {
+
+        Event event = eventRepository.findByIdAndState(id, State.PUBLISHED);
+
+        if (event == null) {
+            throw new NotFoundException("Не найдено опубликованного события по заданному id");
+        }
+
+        //здесь надо запросить количество просмотров, не забыть потом удалить нули в мапперах
+
+        return EventMapper.toEventFullDto(event, getConfirmedRequests(event.getId()));
+
+    }
+
+    @Override
     public EventFullDto updateEventFromAdmin(Long eventId, UpdateEventAdminRequest updateEvent) {
         Event oldEvent = checkEvent(eventId);
         if (oldEvent.getState().equals(State.PUBLISHED) || oldEvent.getState().equals(State.CANCELED)) {
@@ -186,6 +283,7 @@ public class EventServiceImpl implements EventService {
         if (action != null) {
             if (AdminEventStatus.PUBLISH_EVENT.equals(action)) {
                 eventForUpdate.setState(State.PUBLISHED);
+                eventForUpdate.setPublishedOn(LocalDateTime.now());
                 hasChanges = true;
             } else if (AdminEventStatus.REJECT_EVENT.equals(action)) {
                 eventForUpdate.setState(State.CANCELED);
@@ -349,8 +447,28 @@ public class EventServiceImpl implements EventService {
         return requests.stream().collect(Collectors.groupingBy(r -> r.getEvent().getId()));
     }
 
+    private List<Event> getAvailableOnly(List<Event> events) {
+        List<Request> requests = requestRepository.findAllByEventIdInAndStatus(events.stream()
+                .map(Event::getId).collect(Collectors.toList()), RequestStatus.CONFIRMED);
+        final Map<Long, List<Request>> requestsByEvent = requests.stream().collect(Collectors.groupingBy(r -> r.getEvent().getId()));
+
+        List<Event> events1 = events.stream().filter(event -> requestsByEvent.containsKey(event.getId())
+                && (event.getParticipantLimit() == null || event.getParticipantLimit() > requestsByEvent.get(event.getId()).size())).collect(Collectors.toList());
+
+        for (Event event : events1) {
+            event.setConfirmedRequests(requestsByEvent.get(event.getId()).size());
+        }
+        return events1;
+    }
+
     private List<Request> getConfirmedRequests(Long eventId) {
         return requestRepository.findAllByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+    }
+
+    private void setViewsCount(List<Event> events) {
+        for (Event event : events) {
+            event.setViews(0);
+        }
     }
 
     private Event universalUpdate(Event oldEvent, NewEventDto updateEvent) {

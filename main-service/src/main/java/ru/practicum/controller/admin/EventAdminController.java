@@ -22,7 +22,7 @@ public class EventAdminController {
     private final EventService eventService;
 
     @GetMapping
-    public List<EventFullDto> searchEvents(@Valid SearchEventParamAdmin searchEventParamAdmin) {
+    public List<EventFullDto> searchEvents(@Valid @ModelAttribute SearchEventParamAdmin searchEventParamAdmin) {
         log.info("/admin/events/GET/searchEvents");
         return eventService.getAllEventFromAdmin(searchEventParamAdmin);
     }

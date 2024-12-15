@@ -28,9 +28,8 @@ public class UpdateEventAdminRequest {
     @Size(min = 20, max = 2000)
     private String annotation;
 
-    @NotNull
     @Positive
-    private Long categoryId;
+    private Long category;
 
     private Boolean paid;
 

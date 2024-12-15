@@ -8,7 +8,10 @@ import ru.practicum.dto.request.UpdatedRequestsDto;
 import java.util.List;
 
 public interface EventService {
+
     List<EventFullDto> getAllEventFromAdmin(SearchEventParamAdmin searchEventParamAdmin);
+
+    List<EventFullDto> getAllEventPublic(SearchEventParamPublic searchEventParamPublic);
 
     EventFullDto updateEventFromAdmin(Long userId, UpdateEventAdminRequest updateEventAdminRequest);
 
@@ -18,9 +21,12 @@ public interface EventService {
 
     EventFullDto getEventPrivate(Long userId, Long eventId);
 
+    EventFullDto getEvent(Long id);
+
     EventFullDto updateEventFromUser(Long userId, Long eventId, UpdateEventUserRequest inputEventUpdate);
 
     List<ParticipationRequestDto> getRequestsPrivate(Long userId, Long eventId);
 
     UpdatedRequestsDto confirmRequestsPrivate(Long userId, Long eventId, EventRequestStatusUpdateRequest updatedRequests);
+
 }

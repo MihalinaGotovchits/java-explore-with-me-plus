@@ -2,6 +2,7 @@ package ru.practicum.controller.privates;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.service.RequestService;
@@ -15,6 +16,7 @@ import java.util.List;
 public class UserRequestsController {
     private final RequestService requestService;
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ParticipationRequestDto createRequest(@PathVariable Long userId,
                                                  @RequestParam Long eventId) {

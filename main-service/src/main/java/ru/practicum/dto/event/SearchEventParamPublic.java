@@ -1,6 +1,5 @@
 package ru.practicum.dto.event;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -16,20 +15,23 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class SearchEventParamAdmin {
+public class SearchEventParamPublic {
 
-    private List<Long> users;
-
-    private List<String> states;
+    private String text;
 
     private List<Long> categories;
+
+    private Boolean paid;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime rangeStart;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime rangeEnd;
+
+    private Boolean onlyAvailable = false;
+
+    private Sort sort = Sort.EVENT_DATE;
 
     @PositiveOrZero
     private Integer from = 0;
