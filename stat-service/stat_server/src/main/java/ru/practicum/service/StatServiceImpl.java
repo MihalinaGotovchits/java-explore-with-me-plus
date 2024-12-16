@@ -1,5 +1,6 @@
 package ru.practicum.service;
 
+import org.hibernate.SessionFactory;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,20 +20,47 @@ import java.util.List;
 @Slf4j
 public class StatServiceImpl implements StatService {
     private final StatRepository statRepository;
+    private SessionFactory sessionFactory;
 
     @Override
     @Transactional
     public StatDto createStat(StatDto statDto) {
         log.info("createStat - invoked");
-        Stat stat = statRepository.save(StatMapper.toStat(statDto));
-        log.info("createStat - stat save successfully - {}", stat);
-        return StatMapper.toStatDto(stat);
+
+        if (statDto.getUris() == null) {
+            Stat stat = statRepository.save(StatMapper.toStat(statDto));
+            log.info("createStat - stat save successfully - {}", stat);
+            return StatMapper.toStatDto(stat);
+        } else {
+            createStats(statDto);
+            return null;
+        }
+    }
+
+    @Override
+    @Transactional
+    public void createStats(StatDto statDto) {
+        log.info("createStat - invoked");
+        saveMultipleEntities(StatMapper.toStats(statDto));
+        log.info("createStat - stat save successfully - {}", statDto);
+    }
+
+    @Transactional
+    public void saveMultipleEntities(List<Stat> entities) {
+        for (Stat stat : entities) {
+            statRepository.save(stat);
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<StatResponseDto> readStat(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
         log.info("readStat - invoked");
+
+        if (start == null && end == null && uris != null) {
+            log.info("readStat - success - unique = true, uris not empty");
+            return statRepository.findAllUniqueIp(uris);
+        }
 
         if (start.isAfter(end)) {
             log.error("Время начала не может быть позже времени завершения");

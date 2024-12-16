@@ -1,5 +1,7 @@
 package ru.practicum.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.practicum.client.StatClient;
 import ru.practicum.dto.StatDto;
@@ -27,14 +28,13 @@ import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.*;
 import ru.practicum.repository.*;
 import ru.practicum.service.EventService;
-import ru.practicum.service.StatService;
+//import ru.practicum.service.StatService;
 import ru.practicum.status.event.AdminEventStatus;
 import ru.practicum.status.event.State;
 import ru.practicum.status.event.UserEventStatus;
 import ru.practicum.status.request.RequestStatus;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,8 +55,6 @@ public class EventServiceImpl implements EventService {
 
     private final StatClient statClient;
 
-    private final StatService statService;
-
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -74,6 +72,7 @@ public class EventServiceImpl implements EventService {
         }
         //передаем данные клиенту в сервис статистики
         //addStatClient(httpServletRequest);
+
 
         PageRequest pageable = PageRequest.of(searchEventParamPublic.getFrom() / searchEventParamPublic.getSize(),
                 searchEventParamPublic.getSize());
@@ -279,7 +278,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto getEvent(Long id) {
+    public EventFullDto getEvent(Long id) throws JsonProcessingException {
 
         Event event = eventRepository.findByIdAndState(id, State.PUBLISHED);
 
@@ -287,7 +286,16 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Не найдено опубликованного события по заданному id");
         }
 
-        //здесь надо запросить количество просмотров, не забыть потом удалить нули в мапперах
+        List<String> params = new ArrayList<>();
+        params.add("/events/" + event.getId());
+
+        ObjectMapper mapper = new ObjectMapper();
+        List<StatResponseDto> statResponseDtos = statClient.readStatEvent(null, null, params, true);
+        if (statResponseDtos.size() > 0) {
+            event.setViews(((long)statResponseDtos.size()));
+        } else {
+            event.setViews(0L);
+        }
 
         return EventMapper.toEventFullDto(event, getConfirmedRequests(event.getId()));
 
@@ -512,8 +520,23 @@ public class EventServiceImpl implements EventService {
     }
 
     private void setViewsCount(List<Event> events) {
+
+        List<String> params = new ArrayList<>();
+        Map<String, Event> eventMap = new HashMap<>();
+
         for (Event event : events) {
-            event.setViews(0);
+            String key = "/events/" + event.getId();
+            eventMap.put(key, event);
+            params.add(key);
+        }
+
+        List<StatResponseDto> responseDtos = statClient.readStatEvent(null, null, params, true);
+
+        for (StatResponseDto responseDto : responseDtos) {
+            Event event = eventMap.get(responseDto.getUri());
+            if (event != null) {
+                event.setViews(responseDto.getHits());
+            }
         }
     }
 

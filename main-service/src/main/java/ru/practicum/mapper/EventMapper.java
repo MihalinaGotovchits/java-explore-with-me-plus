@@ -40,7 +40,7 @@ public class EventMapper {
                 .createdOn(event.getCreateOn())
                 .initiator(UserMapper.userShortDto(event.getInitiator()))
                 .confirmedRequests(event.getConfirmedRequests())
-                .views(event.getViews())
+                .views((event.getViews() != null) ? event.getViews() : 0)
                 .state(event.getState())
                 .annotation(event.getAnnotation())
                 .participantLimit(event.getParticipantLimit())
@@ -50,7 +50,6 @@ public class EventMapper {
                 .eventDate(event.getEventDate())
                 .location(LocationMapper.toLocationDto(event.getLocation()))
                 //пока не подключена статистика
-                .views(0)
                 .build();
 
         if (event.getPublishedOn() != null) {
@@ -67,7 +66,7 @@ public class EventMapper {
                 .createdOn(event.getCreateOn())
                 .initiator(UserMapper.userShortDto(event.getInitiator()))
                 .confirmedRequests(event.getConfirmedRequests())
-                .views(event.getViews())
+                .views((event.getViews() != null) ? event.getViews() : 0)
                 .state(event.getState())
                 .annotation(event.getAnnotation())
                 .participantLimit(event.getParticipantLimit())
@@ -78,7 +77,6 @@ public class EventMapper {
                 .location(LocationMapper.toLocationDto(event.getLocation()))
                 .confirmedRequests(requests.size())
                 //пока не подключена статистика
-                .views(0)
                 .build();
 
         if (event.getPublishedOn() != null) {

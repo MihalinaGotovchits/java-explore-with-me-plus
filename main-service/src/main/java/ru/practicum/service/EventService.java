@@ -1,5 +1,6 @@
 package ru.practicum.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.request.ParticipationRequestDto;
@@ -21,7 +22,7 @@ public interface EventService {
 
     EventFullDto getEventPrivate(Long userId, Long eventId);
 
-    EventFullDto getEvent(Long id);
+    EventFullDto getEvent(Long id) throws JsonProcessingException;
 
     EventFullDto updateEventFromUser(Long userId, Long eventId, UpdateEventUserRequest inputEventUpdate);
 
