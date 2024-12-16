@@ -1,7 +1,6 @@
 package ru.practicum.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -252,7 +251,6 @@ public class EventServiceImpl implements EventService {
         List<String> params = new ArrayList<>();
         params.add("/events/" + event.getId());
 
-        ObjectMapper mapper = new ObjectMapper();
         List<StatResponseDto> statResponseDtos = statClient.readStatEvent(null, null, params, true);
         if (statResponseDtos.size() > 0) {
             event.setViews(((long) statResponseDtos.size()));
