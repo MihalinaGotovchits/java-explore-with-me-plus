@@ -67,12 +67,9 @@ public class EventServiceImpl implements EventService {
         LocalDateTime rangeEnd = searchEventParamPublic.getRangeEnd();
         LocalDateTime rangeStart = searchEventParamPublic.getRangeStart();
 
-        if(rangeEnd != null && rangeStart != null && rangeEnd.isBefore(rangeStart)) {
+        if (rangeEnd != null && rangeStart != null && rangeEnd.isBefore(rangeStart)) {
             throw new UncorrectedParametersException("rangeEnd is before rangeStart");
         }
-        //передаем данные клиенту в сервис статистики
-        //addStatClient(httpServletRequest);
-
 
         PageRequest pageable = PageRequest.of(searchEventParamPublic.getFrom() / searchEventParamPublic.getSize(),
                 searchEventParamPublic.getSize());
@@ -130,8 +127,6 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        //Пока заглушка без статистики
-        //здесь надо запросить количество просмотров, не забыть потом удалить нули в мапперах
         setViewsCount(eventsResponse);
 
         if (sort == Sort.VIEWS) {
@@ -144,38 +139,6 @@ public class EventServiceImpl implements EventService {
                     .map(EventMapper::toEventFullDto).toList();
         }
     }
-
-       /* // Получаем статистику для отображения
-
-        List<String> uris = eventsResponse.stream()
-
-                .map(event -> "/events/" + event.getId())
-
-                .collect(Collectors.toList());
-
-
-        // Запрашиваем статистику по событиям
-
-        List<StatResponseDto> statResponses = statService.readStat(
-                rangeStart.format(DateTimeFormatter.ISO_DATE_TIME),
-                rangeEnd.format(DateTimeFormatter.ISO_DATE_TIME),
-                uris,
-                false).getBody();
-
-        // Устанавливаем количество просмотров на события
-        for (Event event : eventsResponse) {
-
-            StatResponseDto stat = statResponses.stream()
-                    .filter(s -> s.getUri().equals("/events/" + event.getId()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (stat != null) {
-                event.setViews(stat.getHits().intValue()); // Устанавливаем количество просмотров для события
-            }
-
-        }
-*/
 
     @Override
     public List<EventFullDto> getAllEventFromAdmin(SearchEventParamAdmin searchEventParamsAdmin) {
@@ -292,7 +255,7 @@ public class EventServiceImpl implements EventService {
         ObjectMapper mapper = new ObjectMapper();
         List<StatResponseDto> statResponseDtos = statClient.readStatEvent(null, null, params, true);
         if (statResponseDtos.size() > 0) {
-            event.setViews(((long)statResponseDtos.size()));
+            event.setViews(((long) statResponseDtos.size()));
         } else {
             event.setViews(0L);
         }
@@ -589,10 +552,10 @@ public class EventServiceImpl implements EventService {
 
     private void addStatClient(HttpServletRequest httpServletRequest) {
         statClient.addStatEvent(StatDto.builder()
-                        .app(applicationName)
-                        .uri(httpServletRequest.getRequestURI())
-                        .ip(httpServletRequest.getRemoteAddr())
-                        .timestamp(LocalDateTime.now())
+                .app(applicationName)
+                .uri(httpServletRequest.getRequestURI())
+                .ip(httpServletRequest.getRemoteAddr())
+                .timestamp(LocalDateTime.now())
                 .build());
     }
 }
