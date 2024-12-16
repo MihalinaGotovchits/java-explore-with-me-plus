@@ -6,15 +6,10 @@ import ru.practicum.dto.event.*;
 import ru.practicum.model.*;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @UtilityClass
 public class EventMapper {
-
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Event toEvent(NewEventDto eventDto, User user, Location location, Category category) {
         return Event.builder()
@@ -49,7 +44,6 @@ public class EventMapper {
                 .category((event.getCategory() == null) ? new CategoryDto() : CategoryMapper.toCategoryDto(event.getCategory()))
                 .eventDate(event.getEventDate())
                 .location(LocationMapper.toLocationDto(event.getLocation()))
-                //пока не подключена статистика
                 .build();
 
         if (event.getPublishedOn() != null) {
@@ -76,7 +70,6 @@ public class EventMapper {
                 .eventDate(event.getEventDate())
                 .location(LocationMapper.toLocationDto(event.getLocation()))
                 .confirmedRequests(requests.size())
-                //пока не подключена статистика
                 .build();
 
         if (event.getPublishedOn() != null) {
@@ -95,11 +88,6 @@ public class EventMapper {
                 .paid(event.getPaid())
                 .title(event.getTitle())
                 .build();
-    }
-
-    public List<EventShortDto> eventToEventShortDtoList(List<Event> events) {
-        return events == null ? new ArrayList<>() :
-                events.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
     }
 
     public NewEventDto toNewEventDto(UpdateEventAdminRequest adminRequest) {
