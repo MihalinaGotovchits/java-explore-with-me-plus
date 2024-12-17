@@ -12,7 +12,6 @@ import ru.practicum.dto.StatResponseDto;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class StatClient extends BaseClient {
@@ -34,16 +33,7 @@ public class StatClient extends BaseClient {
         return post(url, statDto);
     }
 
-    public void addStatEvents(StatDto statDto) {
-        UriComponentsBuilder uri = UriComponentsBuilder.fromHttpUrl(serverUrl).path("/hit");
-
-        String url = uri.build().toUriString();
-        post(url, statDto);
-    }
-
     public List<StatResponseDto> readStatEvent(String start, String end, @Nullable List<String> uris, boolean unique) {
-        Map<String, Object> parameters;
-
         UriComponentsBuilder uri = UriComponentsBuilder.fromHttpUrl(serverUrl).path("/stats");
 
         if (start != null) {

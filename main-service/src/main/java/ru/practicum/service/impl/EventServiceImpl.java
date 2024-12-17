@@ -1,18 +1,14 @@
 package ru.practicum.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.practicum.client.StatClient;
-import ru.practicum.dto.StatDto;
 import ru.practicum.dto.StatResponseDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
@@ -57,11 +53,8 @@ public class EventServiceImpl implements EventService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Value("${server.application.name:ewm-service}")
-    private String applicationName;
-
     @Override
-    public List<EventFullDto> getAllEventPublic(SearchEventParamPublic searchEventParamPublic/*, HttpServletRequest httpServletRequest*/) {
+    public List<EventFullDto> getAllEventPublic(SearchEventParamPublic searchEventParamPublic) {
 
         LocalDateTime rangeEnd = searchEventParamPublic.getRangeEnd();
         LocalDateTime rangeStart = searchEventParamPublic.getRangeStart();
@@ -72,7 +65,7 @@ public class EventServiceImpl implements EventService {
 
         PageRequest pageable = PageRequest.of(searchEventParamPublic.getFrom() / searchEventParamPublic.getSize(),
                 searchEventParamPublic.getSize());
-        Specification<Event> specification = Specification.where(null);
+        Specification<Event> specification = Specification.where((root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         String text = searchEventParamPublic.getText();
         List<Long> categories = searchEventParamPublic.getCategories();
@@ -240,7 +233,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto getEvent(Long id) throws JsonProcessingException {
+    public EventFullDto getEvent(Long id) {
 
         Event event = eventRepository.findByIdAndState(id, State.PUBLISHED);
 
@@ -496,7 +489,7 @@ public class EventServiceImpl implements EventService {
         for (StatResponseDto responseDto : responseDtos) {
             Event event = eventMap.get(responseDto.getUri());
             if (event != null) {
-                event.setViews(responseDto.getHits());
+                event.setViews((responseDto.getHits() == null) ? 0L : responseDto.getHits());
             }
         }
     }
@@ -546,14 +539,5 @@ public class EventServiceImpl implements EventService {
             oldEvent = null;
         }
         return oldEvent;
-    }
-
-    private void addStatClient(HttpServletRequest httpServletRequest) {
-        statClient.addStatEvent(StatDto.builder()
-                .app(applicationName)
-                .uri(httpServletRequest.getRequestURI())
-                .ip(httpServletRequest.getRemoteAddr())
-                .timestamp(LocalDateTime.now())
-                .build());
     }
 }

@@ -1,6 +1,5 @@
 package ru.practicum.service;
 
-import org.hibernate.SessionFactory;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,6 @@ import java.util.List;
 @Slf4j
 public class StatServiceImpl implements StatService {
     private final StatRepository statRepository;
-    private SessionFactory sessionFactory;
 
     @Override
     @Transactional
@@ -60,6 +58,9 @@ public class StatServiceImpl implements StatService {
         if (start == null && end == null && !uris.isEmpty()) {
             log.info("readStat - success - unique = true, uris not empty");
             return statRepository.findAllUniqueIp(uris);
+        } else if (start == null || end == null) {
+            log.error("Время начала и время окончания должны быть заданы");
+            throw new WrongTimeException("Время начала и время окончания должны быть заданы");
         }
 
         if (start == null || end == null) {
@@ -82,10 +83,19 @@ public class StatServiceImpl implements StatService {
         } else {
             if (unique) {
                 log.info("readStat - success - unique = true, uris not empty");
-                return statRepository.findAllByTimestampBetweenStartAndEndWithUrisUniqueIp(start, end, uris);
+                if (uris.size() == 1) {
+                    return statRepository.findAllByTimestampBetweenStartAndEndWithUrisUniqueIpContainsUri(start, end, uris.getFirst());
+                } else {
+                    return statRepository.findAllByTimestampBetweenStartAndEndWithUrisUniqueIp(start, end, uris);
+                }
+
             } else {
                 log.info("readStat - success - unique = false, uris not empty");
-                return statRepository.findAllByTimestampBetweenStartAndEndWithUrisIpNotUnique(start, end, uris);
+                if (uris.size() == 1) {
+                    return statRepository.findAllByTimestampBetweenStartAndEndContainsUriIpNotUnique(start, end, uris.getFirst());
+                } else {
+                    return statRepository.findAllByTimestampBetweenStartAndEndWithUrisIpNotUnique(start, end, uris);
+                }
             }
         }
     }
