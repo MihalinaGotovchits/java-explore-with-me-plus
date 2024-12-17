@@ -61,9 +61,8 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private State state;
 
-    //@Transient
     private String title;
 
     @Transient
-    private Integer views;
+    private Long views;
 }

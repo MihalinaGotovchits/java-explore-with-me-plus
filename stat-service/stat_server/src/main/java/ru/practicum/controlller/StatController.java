@@ -1,5 +1,6 @@
 package ru.practicum.controlller;
 
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -32,12 +33,12 @@ public class StatController {
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<List<StatResponseDto>> readStatEvent(@RequestParam @DateTimeFormat(pattern = DATE_FORMAT) LocalDateTime start,
-                                                               @RequestParam @DateTimeFormat(pattern = DATE_FORMAT) LocalDateTime end,
+    public List<StatResponseDto> readStatEvent(@Nullable @RequestParam @DateTimeFormat(pattern = DATE_FORMAT) LocalDateTime start,
+                                                               @Nullable @RequestParam @DateTimeFormat(pattern = DATE_FORMAT) LocalDateTime end,
                                                                @RequestParam(defaultValue = "") List<String> uris,
                                                                @RequestParam(defaultValue = "false") boolean unique) {
         List<StatResponseDto> stats = statService.readStat(start, end, uris, unique);
         log.info("GET/stats - stat size = {}", stats.size());
-        return new ResponseEntity<>(stats, HttpStatus.OK);
+        return stats;
     }
 }

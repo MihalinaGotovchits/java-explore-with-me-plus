@@ -6,7 +6,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import ru.practicum.dto.StatResponseDto;
 
+import java.util.List;
 import java.util.Map;
 
 public class BaseClient {
@@ -16,8 +18,8 @@ public class BaseClient {
         this.restTemplate = restTemplate;
     }
 
-    protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> parameters) {
-        return makeAndSendRequest(HttpMethod.GET, path, parameters, null);
+    protected List<StatResponseDto> get(String path, @Nullable Map<String, Object> parameters) {
+        return restTemplate.getForEntity(path, List.class).getBody();
     }
 
     protected <T> ResponseEntity<Object> post(String path, T body) {
