@@ -1,6 +1,5 @@
 package ru.practicum.service;
 
-import org.hibernate.SessionFactory;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,6 @@ import java.util.List;
 @Slf4j
 public class StatServiceImpl implements StatService {
     private final StatRepository statRepository;
-    private SessionFactory sessionFactory;
 
     @Override
     @Transactional

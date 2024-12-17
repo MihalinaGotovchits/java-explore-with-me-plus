@@ -2,16 +2,13 @@ package ru.practicum.service.impl;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.practicum.client.StatClient;
-import ru.practicum.dto.StatDto;
 import ru.practicum.dto.StatResponseDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
@@ -56,11 +53,8 @@ public class EventServiceImpl implements EventService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Value("${server.application.name:ewm-service}")
-    private String applicationName;
-
     @Override
-    public List<EventFullDto> getAllEventPublic(SearchEventParamPublic searchEventParamPublic/*, HttpServletRequest httpServletRequest*/) {
+    public List<EventFullDto> getAllEventPublic(SearchEventParamPublic searchEventParamPublic) {
 
         LocalDateTime rangeEnd = searchEventParamPublic.getRangeEnd();
         LocalDateTime rangeStart = searchEventParamPublic.getRangeStart();
@@ -545,14 +539,5 @@ public class EventServiceImpl implements EventService {
             oldEvent = null;
         }
         return oldEvent;
-    }
-
-    private void addStatClient(HttpServletRequest httpServletRequest) {
-        statClient.addStatEvent(StatDto.builder()
-                .app(applicationName)
-                .uri(httpServletRequest.getRequestURI())
-                .ip(httpServletRequest.getRemoteAddr())
-                .timestamp(LocalDateTime.now())
-                .build());
     }
 }

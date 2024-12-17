@@ -27,7 +27,6 @@ public class BaseClient {
                 new ParameterizedTypeReference<List<StatResponseDto>>() {}
         );
 
-        // Возвращаем тело ответа
         return responseEntity.getBody();
     }
 

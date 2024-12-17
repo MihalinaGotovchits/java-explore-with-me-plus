@@ -13,7 +13,6 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-/**данные для создания новой подборки событий*/
 public class NewCompilationDto {
 
     private Boolean pinned;

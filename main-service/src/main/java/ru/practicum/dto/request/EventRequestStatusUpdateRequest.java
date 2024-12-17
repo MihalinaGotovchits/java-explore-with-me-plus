@@ -12,10 +12,7 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-/**предназначен для обработки запроса на изменение статуса заявок на участие в событии*/
 public class EventRequestStatusUpdateRequest {
-    /**уникальные идентификаторы заявок на участие*/
     private Set<Long> requestIds;
-    /**указывает на новый статус, который необходимо установить для указанных заявок (статусы находятся в enum RequestStatus)*/
     private RequestStatus status;
 }

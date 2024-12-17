@@ -12,7 +12,6 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-/** подборка событий, содержащая список событий, заголовок и статус закрепления*/
 public class CompilationDto {
 
     private Long id;

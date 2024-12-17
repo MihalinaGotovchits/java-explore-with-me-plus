@@ -34,7 +34,7 @@ public class EventPublicController {
 
     @GetMapping
     public List<EventFullDto> searchEvents(@Valid @ModelAttribute SearchEventParamPublic searchEventParamPublic, HttpServletRequest request) {
-        log.info("/admin/events/GET/searchEvents");
+        log.info("/events/GET/searchEvents");
         List<EventFullDto> events = eventService.getAllEventPublic(searchEventParamPublic);
 
         StatDto statDto = new StatDto(applicationName, null, new HashSet<>(), request.getRemoteAddr(), LocalDateTime.now());
