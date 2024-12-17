@@ -60,6 +60,9 @@ public class StatServiceImpl implements StatService {
         if (start == null && end == null && uris != null) {
             log.info("readStat - success - unique = true, uris not empty");
             return statRepository.findAllUniqueIp(uris);
+        } else if (start == null || end == null) {
+            log.error("Время начала и время окончания должны быть заданы");
+            throw new WrongTimeException("Время начала и время окончания должны быть заданы");
         }
 
         if (start.isAfter(end)) {
@@ -78,10 +81,19 @@ public class StatServiceImpl implements StatService {
         } else {
             if (unique) {
                 log.info("readStat - success - unique = true, uris not empty");
-                return statRepository.findAllByTimestampBetweenStartAndEndWithUrisUniqueIp(start, end, uris);
+                if (uris.size() == 1) {
+                    return statRepository.findAllByTimestampBetweenStartAndEndWithUrisUniqueIpContainsUri(start, end, uris.getFirst());
+                } else {
+                    return statRepository.findAllByTimestampBetweenStartAndEndWithUrisUniqueIp(start, end, uris);
+                }
+
             } else {
                 log.info("readStat - success - unique = false, uris not empty");
-                return statRepository.findAllByTimestampBetweenStartAndEndWithUrisIpNotUnique(start, end, uris);
+                if (uris.size() == 1) {
+                    return statRepository.findAllByTimestampBetweenStartAndEndContainsUriIpNotUnique(start, end, uris.getFirst());
+                } else {
+                    return statRepository.findAllByTimestampBetweenStartAndEndWithUrisIpNotUnique(start, end, uris);
+                }
             }
         }
     }

@@ -1,6 +1,5 @@
 package ru.practicum.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -72,7 +71,7 @@ public class EventServiceImpl implements EventService {
 
         PageRequest pageable = PageRequest.of(searchEventParamPublic.getFrom() / searchEventParamPublic.getSize(),
                 searchEventParamPublic.getSize());
-        Specification<Event> specification = Specification.where(null);
+        Specification<Event> specification = Specification.where((root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         String text = searchEventParamPublic.getText();
         List<Long> categories = searchEventParamPublic.getCategories();
@@ -240,7 +239,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto getEvent(Long id) throws JsonProcessingException {
+    public EventFullDto getEvent(Long id) {
 
         Event event = eventRepository.findByIdAndState(id, State.PUBLISHED);
 
@@ -496,7 +495,7 @@ public class EventServiceImpl implements EventService {
         for (StatResponseDto responseDto : responseDtos) {
             Event event = eventMap.get(responseDto.getUri());
             if (event != null) {
-                event.setViews(responseDto.getHits());
+                event.setViews((responseDto.getHits() == null) ? 0L : responseDto.getHits());
             }
         }
     }

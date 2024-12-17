@@ -1,6 +1,7 @@
 package ru.practicum.client;
 
 import jakarta.annotation.Nullable;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,15 @@ public class BaseClient {
     }
 
     protected List<StatResponseDto> get(String path, @Nullable Map<String, Object> parameters) {
-        return restTemplate.getForEntity(path, List.class).getBody();
+        ResponseEntity<List<StatResponseDto>> responseEntity = restTemplate.exchange(
+                path,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<StatResponseDto>>() {}
+        );
+
+        // Возвращаем тело ответа
+        return responseEntity.getBody();
     }
 
     protected <T> ResponseEntity<Object> post(String path, T body) {
