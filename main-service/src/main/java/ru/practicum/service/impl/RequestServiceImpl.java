@@ -3,7 +3,6 @@ package ru.practicum.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.DataIntegrityViolationException;
@@ -40,7 +39,7 @@ public class RequestServiceImpl implements RequestService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id=%d not found", eventId)));
 
-        requestRepository.getRequestByRequester_IdAndEvent_Id(userId, eventId)
+        requestRepository.getRequestByRequesterIdAndEventId(userId, eventId)
                 .ifPresent(result -> {
                     throw new ConflictException(String.format("Request with userId=%d and eventId=%d", userId, eventId));
                 });
@@ -78,9 +77,8 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getRequests(Long requestId) {
-        List<ParticipationRequestDto> dtos = requestRepository.getRequestsByRequester_Id(requestId).stream()
+        List<ParticipationRequestDto> dtos = requestRepository.getRequestsByRequesterId(requestId).stream()
                 .map(RequestMapper::toParticipationRequestDto)
                 .toList();
         log.info("getRequests - successfully");
