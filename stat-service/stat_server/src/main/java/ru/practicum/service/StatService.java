@@ -10,4 +10,6 @@ public interface StatService {
     StatDto createStat(StatDto statDto);
 
     List<StatResponseDto> readStat(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique);
+
+    void createStats(StatDto statDto);
 }

@@ -1,12 +1,15 @@
 package ru.practicum.client;
 
 import jakarta.annotation.Nullable;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import ru.practicum.dto.StatResponseDto;
 
+import java.util.List;
 import java.util.Map;
 
 public class BaseClient {
@@ -16,8 +19,15 @@ public class BaseClient {
         this.restTemplate = restTemplate;
     }
 
-    protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> parameters) {
-        return makeAndSendRequest(HttpMethod.GET, path, parameters, null);
+    protected List<StatResponseDto> get(String path, @Nullable Map<String, Object> parameters) {
+        ResponseEntity<List<StatResponseDto>> responseEntity = restTemplate.exchange(
+                path,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<StatResponseDto>>() {}
+        );
+
+        return responseEntity.getBody();
     }
 
     protected <T> ResponseEntity<Object> post(String path, T body) {

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -22,6 +23,8 @@ public class StatDto {
     @NotBlank(groups = Create.class)
     @Size(max = 50, groups = Create.class)
     private String uri;
+
+    private Set<String> uris;
 
     @NotBlank(groups = Create.class)
     @Size(max = 15, groups = Create.class)
