@@ -19,7 +19,6 @@ import ru.practicum.repository.UserRepository;
 import ru.practicum.service.CommentService;
 import ru.practicum.status.event.State;
 
-import java.awt.print.Pageable;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
