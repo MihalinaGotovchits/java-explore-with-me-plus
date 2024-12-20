@@ -23,7 +23,7 @@ public class CommentAdminController {
         commentService.deleteCommentByAdmin(commentId);
     }
 
-    @GetMapping
+    @GetMapping("/search")
     public List<Comment> searchComments(@RequestParam(name = "text") String text,
                                         @RequestParam(value = "from", defaultValue = "0") Integer from,
                                         @RequestParam(value = "size", defaultValue = "10") Integer size) {
