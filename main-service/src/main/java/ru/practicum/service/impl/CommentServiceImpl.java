@@ -38,7 +38,7 @@ public class CommentServiceImpl implements CommentService {
         User user = checkUser(userId);
         Event event = checkEvent(eventId);
         if (!event.getState().equals(State.PUBLISHED)) {
-            throw new UncorrectedParametersException("Невозможно добавить комментарий к необубликованному событию");
+            throw new UncorrectedParametersException("Невозможно добавить комментарий к неопубликованному событию");
         }
         return CommentMapper.toCommentDto(commentRepository.save(CommentMapper.toComment(commentDto, event, user)));
     }
