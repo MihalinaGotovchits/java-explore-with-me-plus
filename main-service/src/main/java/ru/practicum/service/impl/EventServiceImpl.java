@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.practicum.client.StatClient;
 import ru.practicum.dto.StatResponseDto;
+import ru.practicum.dto.comment.CountCommentsByEventDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.request.ParticipationRequestDto;
@@ -23,7 +24,6 @@ import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.*;
 import ru.practicum.repository.*;
 import ru.practicum.service.EventService;
-//import ru.practicum.service.StatService;
 import ru.practicum.status.event.AdminEventStatus;
 import ru.practicum.status.event.State;
 import ru.practicum.status.event.UserEventStatus;
@@ -49,6 +49,8 @@ public class EventServiceImpl implements EventService {
     private final LocationRepository locationRepository;
 
     private final StatClient statClient;
+
+    private final CommentRepository commentRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -119,16 +121,28 @@ public class EventServiceImpl implements EventService {
             }
         }
 
+        List<CountCommentsByEventDto> commentsCount = commentRepository.countCommentByEvent(eventsResponse.stream()
+                .map(Event::getId).collect(Collectors.toList()));
+        Map<Long, Long> commentsCountToEventIdMap = commentsCount.stream().collect(Collectors.toMap(
+                CountCommentsByEventDto::getEventId, CountCommentsByEventDto::getCountComments));
+
+        List<EventFullDto> eventFullDtos = eventsResponse.stream().map(event -> {
+            EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
+            Long commentCount = commentsCountToEventIdMap.getOrDefault(event.getId(), 0L);
+            eventFullDto.setComments(commentCount);
+            return eventFullDto;
+        }).toList();
+
         setViewsCount(eventsResponse);
 
         if (sort == Sort.VIEWS) {
-            return eventsResponse.stream()
-                    .sorted(Comparator.comparing(Event::getViews))
-                    .map(EventMapper::toEventFullDto).toList();
+            return eventFullDtos.stream()
+                    .sorted(Comparator.comparing(EventFullDto::getViews))
+                    .collect(Collectors.toList());
         } else {
-            return eventsResponse.stream()
-                    .sorted(Comparator.comparing(Event::getEventDate))
-                    .map(EventMapper::toEventFullDto).toList();
+            return eventFullDtos.stream()
+                    .sorted(Comparator.comparing(EventFullDto::getEventDate))
+                    .collect(Collectors.toList());
         }
     }
 

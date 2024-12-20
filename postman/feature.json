@@ -1,0 +1,1551 @@
+{
+	"info": {
+		"_postman_id": "ad29816b-d792-4991-a99e-7b04291f7173",
+		"name": "Test Explore With Me - feature Comments",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33041832"
+	},
+	"item": [
+		{
+			"name": "Valid",
+			"item": [
+				{
+					"name": "Success",
+					"item": [
+						{
+							"name": "Добавление комментария",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 201 и данные в формате json\", function () {\r",
+											"    pm.response.to.have.status(201);   \r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"});\r",
+											"\r",
+											"const source = JSON.parse(pm.request.body.raw);\r",
+											"const target = pm.response.json();\r",
+											"\r",
+											"pm.test(\"Комментарий должен содержать поля: id, created, text, authorId\", function () {\r",
+											"pm.expect(target).to.have.property('id');\r",
+											"pm.expect(target).to.have.property('text');\r",
+											"pm.expect(target).to.have.property('authorId');\r",
+											"pm.expect(target).to.have.property('created');\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+											"    pm.expect(target.id).to.not.be.null;\r",
+											"    pm.expect(source.text).equal(target.text);\r",
+											"    pm.expect(target.authorId).equal(2);\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"text\": \"Comment for event  from user \"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/events/:eventId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										"events",
+										":eventId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "2"
+										},
+										{
+											"key": "eventId",
+											"value": "2"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Получение комментария",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const body = pm.response.json(); // получаем тело ответа в формате JSON\r",
+											"\r",
+											"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function() {\r",
+											"    pm.response.to.be.ok; // код ответа должен быть равен 200 OK\r",
+											"    pm.response.to.be.withBody; // ответ должен содержать тело\r",
+											"    pm.response.to.be.json; // и тело ответа должно быть в формате JSON\r",
+											"})\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										":commentId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "2"
+										},
+										{
+											"key": "commentId",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Обновление комментария",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function() {\r",
+											"    pm.response.to.be.ok; // код ответа должен быть равен 200 OK\r",
+											"    pm.response.to.be.withBody; // ответ должен содержать тело\r",
+											"    pm.response.to.be.json; // и тело ответа должно быть в формате JSON\r",
+											"}); \r",
+											"const source = JSON.parse(pm.request.body.raw);\r",
+											"const target = pm.response.json();\r",
+											"\r",
+											"pm.test(\"Категория должна содержать поля: id, created, text, authorId\", function () {\r",
+											"pm.expect(target).to.have.property('id');\r",
+											"pm.expect(target).to.have.property('text');\r",
+											"pm.expect(target).to.have.property('authorId');\r",
+											"pm.expect(target).to.have.property('created');\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+											"    pm.expect(target.id).to.not.be.null;\r",
+											"    pm.expect(source.text).equal(target.text);\r",
+											"    pm.expect(target.id).equal(1);\r",
+											"    pm.expect(target.authorId).equal(2);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"text\": \"Update Comment for event 1 from user 2\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										":commentId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "2"
+										},
+										{
+											"key": "commentId",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Получение обновленного комментария",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const body = pm.response.json(); // получаем тело ответа в формате JSON\r",
+											"\r",
+											"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function() {\r",
+											"    pm.response.to.be.ok; // код ответа должен быть равен 200 OK\r",
+											"    pm.response.to.be.withBody; // ответ должен содержать тело\r",
+											"    pm.response.to.be.json; // и тело ответа должно быть в формате JSON\r",
+											"})\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										":commentId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "2"
+										},
+										{
+											"key": "commentId",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Добавление комментария от user5 to event2",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 201 и данные в формате json\", function () {\r",
+											"    pm.response.to.have.status(201);   \r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"text\": \"Comment for event  from user \"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/events/:eventId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										"events",
+										":eventId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "5"
+										},
+										{
+											"key": "eventId",
+											"value": "2"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Добавление комментария с последующим удалением админом",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 201 и данные в формате json\", function () {\r",
+											"    pm.response.to.have.status(201);   \r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"text\": \"Comment for admin \"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/events/:eventId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										"events",
+										":eventId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "6"
+										},
+										{
+											"key": "eventId",
+											"value": "2"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Получение комментариев события",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function() {\r",
+											"    pm.response.to.be.ok;\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"});\r",
+											"\r",
+											"const target = pm.response.json();\r",
+											"pm.test(\"Ответ должен быть массивом\", function() {\r",
+											"    pm.expect(target).to.be.an('array');\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/comments/:eventId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										":eventId"
+									],
+									"variable": [
+										{
+											"key": "eventId",
+											"value": "2"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Получение событий с количеством комментариев",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.be.ok;\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"});\r",
+											"\r",
+											"const source = pm.collectionVariables.get('response');\r",
+											"const target = pm.response.json()[0];\r",
+											"\r",
+											"pm.test(\"Событие должно содержать поля: id, title, annotation, category, paid, eventDate, initiator, views, confirmedRequests, comments\", function () {\r",
+											"pm.expect(target).to.have.property('id');\r",
+											"pm.expect(target).to.have.property('title');\r",
+											"pm.expect(target).to.have.property('annotation');\r",
+											"pm.expect(target).to.have.property('category');\r",
+											"pm.expect(target).to.have.property('paid');\r",
+											"pm.expect(target).to.have.property('eventDate');\r",
+											"pm.expect(target).to.have.property('initiator');\r",
+											"pm.expect(target).to.have.property('views');\r",
+											"pm.expect(target).to.have.property('confirmedRequests');\r",
+											"pm.expect(target).to.have.property('comments');\r",
+											"});\r",
+											"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+											"    pm.expect(target.comments).to.not.be.null;\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/events",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Получение комментариев события, пустой лист",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.be.ok;\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/comments/:eventId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										":eventId"
+									],
+									"variable": [
+										{
+											"key": "eventId",
+											"value": "2"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Получение комментариев по тексту администратором",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.be.ok;\r",
+											"});\r",
+											"pm.test(\"Test search comment response\", function () {\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData.length, 'List length must be 1').to.eql(1);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Test comment[0] 'id' field\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData[0]).to.have.property('id');\r",
+											"    pm.expect(jsonData[0].id, '\"id\" must be 3').to.eql(3);\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/admin/comments/search?text=Comment for admin ",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"comments",
+										"search"
+									],
+									"query": [
+										{
+											"key": "text",
+											"value": "Comment for admin "
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Получение комментариев по тексту администратором пустой список",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.be.ok;\r",
+											"});\r",
+											"pm.test(\"Test search comment response\", function () {\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData.length, 'List length must be 0').to.eql(0);\r",
+											"});\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/admin/comments/search?text=some",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"comments",
+										"search"
+									],
+									"query": [
+										{
+											"key": "text",
+											"value": "some"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Удаление комментария",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 204\", function() {\r",
+											"    pm.response.to.have.status(204);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										":commentId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "6"
+										},
+										{
+											"key": "commentId",
+											"value": "3"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Удаление комментария администратором",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 204\", function() {\r",
+											"    pm.response.to.have.status(204);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/admin/comments/:commentId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"comments",
+										":commentId"
+									],
+									"variable": [
+										{
+											"key": "commentId",
+											"value": "2"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "InvalidParams",
+					"item": [
+						{
+							"name": "Добавление комментария с пустым текстом",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});\r"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{ \"text\": \"\" }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/events/:eventId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										"events",
+										":eventId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "3"
+										},
+										{
+											"key": "eventId",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Добавление комментария к неопубликованному событию",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});\r"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{ \"text\": \"This is a valid comment.\" }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/events/:eventId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										"events",
+										":eventId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "2"
+										},
+										{
+											"key": "eventId",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Добавление клмментария с длиной текста более 1500 символов",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});\r"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{ \"text\": \"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\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/events/:eventId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										"events",
+										":eventId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "3"
+										},
+										{
+											"key": "eventId",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Обновление комментария с пустым текстом",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});\r"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{ \"text\": \"\" }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										":commentId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "2"
+										},
+										{
+											"key": "commentId",
+											"value": "12"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Обновление комментария с текстом более 1500 символов",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});\r"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{ \"text\": \"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\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										":commentId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "3"
+										},
+										{
+											"key": "commentId",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Удаление комментария пользователь не автор комментария",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});\r"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"comments",
+										"users",
+										":userId",
+										":commentId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "3"
+										},
+										{
+											"key": "commentId",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "404 NotFound",
+			"item": [
+				{
+					"name": "Получение списка комментариев несуществующего события",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"    pm.response.to.be.withBody;\r",
+									"    pm.response.to.be.json;\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/comments/:eventId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"comments",
+								":eventId"
+							],
+							"variable": [
+								{
+									"key": "eventId",
+									"value": "2222"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "получение комментария несуществующего пользователя",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const body = pm.response.json(); // получаем тело ответа в формате JSON\r",
+									"\r",
+									"pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function() {\r",
+									"    pm.response.to.to.have.status(404); // код ответа должен быть равен 200 OK\r",
+									"    pm.response.to.be.withBody; // ответ должен содержать тело\r",
+									"    pm.response.to.be.json; // и тело ответа должно быть в формате JSON\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"comments",
+								"users",
+								":userId",
+								":commentId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "30000"
+								},
+								{
+									"key": "commentId",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "получение несуществующего комментария",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const body = pm.response.json(); // получаем тело ответа в формате JSON\r",
+									"\r",
+									"pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function() {\r",
+									"    pm.response.to.to.have.status(404); // код ответа должен быть равен 200 OK\r",
+									"    pm.response.to.be.withBody; // ответ должен содержать тело\r",
+									"    pm.response.to.be.json; // и тело ответа должно быть в формате JSON\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"comments",
+								"users",
+								":userId",
+								":commentId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "2"
+								},
+								{
+									"key": "commentId",
+									"value": "2000"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Удаление несуществующего комментария",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ответ должен содержать код статуса 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"comments",
+								"users",
+								":userId",
+								":commentId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "6"
+								},
+								{
+									"key": "commentId",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Удаление комментария несуществующего пользователя",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ответ должен содержать код статуса 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/comments/users/:userId/:commentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"comments",
+								"users",
+								":userId",
+								":commentId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "600"
+								},
+								{
+									"key": "commentId",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Добавление комментария к несуществующему событию",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function () {\r",
+									"    pm.response.to.have.status(404);   \r",
+									"    pm.response.to.be.withBody;\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"text\": \"Чай с малиновым вареньем\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/comments/users/:userId/events/:eventId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"comments",
+								"users",
+								":userId",
+								"events",
+								":eventId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "2"
+								},
+								{
+									"key": "eventId",
+									"value": "2222"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Добавление комментария от несуществующего пользователя",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function () {\r",
+									"    pm.response.to.have.status(404);   \r",
+									"    pm.response.to.be.withBody;\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"text\": \"4 принципа ООП\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/comments/users/:userId/events/:eventId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"comments",
+								"users",
+								":userId",
+								"events",
+								":eventId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "12000"
+								},
+								{
+									"key": "eventId",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "Event ID",
+			"value": "{{eid}}"
+		},
+		{
+			"key": "eid",
+			"value": "eid"
+		},
+		{
+			"key": "uid",
+			"value": "uid"
+		}
+	]
+}
