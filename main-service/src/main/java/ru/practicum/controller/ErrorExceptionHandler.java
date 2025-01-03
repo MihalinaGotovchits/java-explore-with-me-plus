@@ -64,6 +64,7 @@ public class ErrorExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST.toString())
                 .message(detailedMessage)
                 .reason("Incorrect parameters")
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
